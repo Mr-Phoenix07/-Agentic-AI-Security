@@ -14,7 +14,6 @@ rely on the behavioral tier.
 from __future__ import annotations
 
 import importlib.util
-from typing import Optional
 
 from .base import Explanation
 
@@ -30,7 +29,7 @@ def _any_available() -> bool:
 
 
 def explain_with_internals(
-    model_ref: Optional[object],
+    model_ref: object | None,
     prompt: str,
     *,
     method: str = "token_attribution",
@@ -66,7 +65,7 @@ def explain_with_internals(
             topk = torch.topk(last.softmax(-1), k=5)
             attrib = [
                 {"token": model_ref.to_string(idx.item()), "prob": round(p.item(), 4)}
-                for p, idx in zip(topk.values, topk.indices)
+                for p, idx in zip(topk.values, topk.indices, strict=False)
             ]
             return Explanation(
                 method="internals.transformer_lens.logit_lens",

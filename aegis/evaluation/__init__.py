@@ -4,13 +4,13 @@ adaptive closed-loop evaluator."""
 from __future__ import annotations
 
 from .behavioral import DIMENSIONS, Analyzer, ProbePair, default_analyzers
+from .longcontext import default_longcontext_analyzers
 from .loop import (
     DIMENSION_TRANSFORMS,
     AdaptiveEvaluator,
     EvaluationReport,
     RoundLog,
 )
-from .longcontext import default_longcontext_analyzers
 from .rag import default_rag_analyzers
 
 __all__ = [

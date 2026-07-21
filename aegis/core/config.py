@@ -11,7 +11,7 @@ import json
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from .authorization import AuthorizationScope
 
@@ -28,8 +28,8 @@ class TargetConfig:
     id: str
     kind: str                              # matches types.TargetKind values
     provider: str = "mock"                 # provider key
-    endpoint: Optional[str] = None
-    model: Optional[str] = None
+    endpoint: str | None = None
+    model: str | None = None
     params: dict = field(default_factory=dict)
     mode: str = "black_box"                # black_box|grey_box|white_box
     metadata: dict = field(default_factory=dict)
@@ -51,7 +51,7 @@ class LoopConfig:
 class Config:
     engagement: str = "unnamed-engagement"
     workdir: Path = field(default_factory=lambda: Path("./aegis_runs"))
-    db_path: Optional[Path] = None
+    db_path: Path | None = None
     scope: AuthorizationScope = field(default_factory=AuthorizationScope)
     targets: list[TargetConfig] = field(default_factory=list)
     loop: LoopConfig = field(default_factory=LoopConfig)
@@ -66,7 +66,7 @@ class Config:
 
     # -- loaders ------------------------------------------------------------ #
     @classmethod
-    def from_dict(cls, data: dict) -> "Config":
+    def from_dict(cls, data: dict) -> Config:
         loop = LoopConfig(**(data.get("loop") or {}))
         scope = AuthorizationScope.from_dict(data.get("authorization") or {})
         targets = [TargetConfig(**t) for t in (data.get("targets") or [])]
@@ -82,7 +82,7 @@ class Config:
         )
 
     @classmethod
-    def load(cls, path: str | os.PathLike) -> "Config":
+    def load(cls, path: str | os.PathLike) -> Config:
         p = Path(path)
         text = p.read_text(encoding="utf-8")
         if p.suffix.lower() in (".yaml", ".yml"):
@@ -95,7 +95,7 @@ class Config:
             data = json.loads(text)
         return cls.from_dict(data or {})
 
-    def target(self, target_id: str) -> Optional[TargetConfig]:
+    def target(self, target_id: str) -> TargetConfig | None:
         return next((t for t in self.targets if t.id == target_id), None)
 
     def to_dict(self) -> dict[str, Any]:

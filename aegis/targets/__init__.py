@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
-from ..core.config import TargetConfig
 from ..core.authorization import AuthorizationScope
+from ..core.config import TargetConfig
 from ..core.types import EvaluationMode, TargetKind
 from ..providers import build_provider
 from .base import Target
@@ -16,7 +14,7 @@ __all__ = ["Target", "RAGTarget", "Document", "WebTarget", "MCPTarget", "MCPTool
            "Endpoint", "build_target"]
 
 
-def build_target(cfg: TargetConfig, scope: Optional[AuthorizationScope] = None) -> Target:
+def build_target(cfg: TargetConfig, scope: AuthorizationScope | None = None) -> Target:
     """Instantiate a :class:`Target` from a :class:`TargetConfig`."""
     provider = build_provider(cfg.provider, scope=scope, model=cfg.model,
                               endpoint=cfg.endpoint, params=cfg.params)

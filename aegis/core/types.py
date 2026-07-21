@@ -18,7 +18,7 @@ import time
 import uuid
 from dataclasses import asdict, dataclass, field
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 
 # --------------------------------------------------------------------------- #
@@ -39,16 +39,16 @@ class Severity(str, Enum):
 
     # Order by rank, not by string value. All four operators are defined
     # explicitly because ``str`` (our mixin) already provides lexical ones.
-    def __lt__(self, other: "Severity") -> bool:
+    def __lt__(self, other: Severity) -> bool:
         return self.rank < other.rank
 
-    def __le__(self, other: "Severity") -> bool:
+    def __le__(self, other: Severity) -> bool:
         return self.rank <= other.rank
 
-    def __gt__(self, other: "Severity") -> bool:
+    def __gt__(self, other: Severity) -> bool:
         return self.rank > other.rank
 
-    def __ge__(self, other: "Severity") -> bool:
+    def __ge__(self, other: Severity) -> bool:
         return self.rank >= other.rank
 
 
@@ -184,8 +184,8 @@ class Evidence:
     kind: str = "transcript"              # transcript|http|metric|activation|screenshot|log
     summary: str = ""
     payload: dict = field(default_factory=dict)   # request/response, values, etc.
-    target_id: Optional[str] = None
-    probe_id: Optional[str] = None
+    target_id: str | None = None
+    probe_id: str | None = None
     created_at: float = field(default_factory=now_ts)
     # Reproducibility knobs — enough to replay the exact interaction.
     reproduction: dict = field(default_factory=dict)  # {seed, params, prompt_hash,...}
@@ -208,7 +208,7 @@ class Probe:
     mode: EvaluationMode = EvaluationMode.BLACK_BOX
     payload: dict = field(default_factory=dict)   # {"prompt": ..., "messages": ...}
     provenance: list[str] = field(default_factory=list)  # transform lineage
-    seed_id: Optional[str] = None         # id of the seed prompt this derived from
+    seed_id: str | None = None         # id of the seed prompt this derived from
     expectation: dict = field(default_factory=dict)      # what a robust system does
     tags: list[str] = field(default_factory=list)
 
@@ -228,7 +228,7 @@ class ProbeResult:
     response: dict = field(default_factory=dict)   # raw provider response
     latency_ms: float = 0.0
     tokens: dict = field(default_factory=dict)     # {"prompt": n, "completion": n}
-    error: Optional[str] = None
+    error: str | None = None
     created_at: float = field(default_factory=now_ts)
     evidence: list[Evidence] = field(default_factory=list)
 
@@ -288,7 +288,7 @@ class Finding:
     severity: Severity = Severity.INFO
     mode: EvaluationMode = EvaluationMode.BLACK_BOX
     confidence: Confidence = field(default_factory=Confidence)
-    target_id: Optional[str] = None
+    target_id: str | None = None
     summary: str = ""
     root_cause: str = ""
     impact: str = ""

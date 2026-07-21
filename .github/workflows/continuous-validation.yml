@@ -1,0 +1,56 @@
+name: Continuous Validation
+
+# Regression tripwire for AI behaviour. Runs an authorized assessment on a
+# schedule and fails if any measured dimension drifts below its accepted baseline
+# (see docs/DEPLOYMENT.md#continuous-validation-deliverable-14).
+#
+# IMPORTANT: this only assesses systems covered by the engagement's fail-closed
+# authorization scope. Provide any real credentials via encrypted repo secrets.
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # nightly 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      config:
+        description: "Path to engagement config"
+        default: "examples/authorized_targets.yaml"
+
+env:
+  AEGIS_CONFIG: ${{ github.event.inputs.config || 'examples/authorized_targets.yaml' }}
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[extras]"
+
+      # Restore the baseline DB from a previous run (if any) so drift is detected
+      # across runs. First run seeds baselines automatically.
+      - name: Restore baselines
+        uses: actions/cache@v4
+        with:
+          path: aegis_runs
+          key: aegis-baselines-${{ hashFiles(env.AEGIS_CONFIG) }}
+
+      - name: Run assessment (regression gate)
+        env:
+          AEGIS_API_KEY: ${{ secrets.AEGIS_API_KEY }}
+        run: |
+          aegis run "$AEGIS_CONFIG" --fail-on high
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aegis-continuous-report
+          path: aegis_runs/**/report.*
+          if-no-files-found: ignore

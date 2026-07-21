@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from .base import Explanation
 from .behavioral import explain_observation
-from .internals import internals_available, explain_with_internals
+from .internals import explain_with_internals, internals_available
 
 __all__ = ["Explanation", "explain_observation", "internals_available",
            "explain_with_internals"]

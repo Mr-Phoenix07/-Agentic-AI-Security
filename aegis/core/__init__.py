@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from .authorization import AuthorizationError, AuthorizationScope, ScopeRule
-from .config import Config, LoopConfig, TargetConfig, default_config
 from .confidence import agree, from_effect, wilson_lower_bound
+from .config import Config, LoopConfig, TargetConfig, default_config
 from .events import Message, MessageBus
 from .types import (
     AgentStatus,

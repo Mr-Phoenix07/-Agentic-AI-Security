@@ -16,19 +16,18 @@ from __future__ import annotations
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Optional
 
 from ..core.authorization import AuthorizationScope
 
 
 @dataclass
 class ProviderRequest:
-    prompt: Optional[str] = None
-    messages: Optional[list[dict]] = None      # [{"role","content"}, ...]
+    prompt: str | None = None
+    messages: list[dict] | None = None      # [{"role","content"}, ...]
     params: dict = field(default_factory=dict)  # temperature, max_tokens, seed...
     # For authorization checks:
-    model: Optional[str] = None
-    endpoint: Optional[str] = None
+    model: str | None = None
+    endpoint: str | None = None
 
     def as_messages(self) -> list[dict]:
         if self.messages:
@@ -47,8 +46,8 @@ class ProviderResponse:
     raw: dict = field(default_factory=dict)
     latency_ms: float = 0.0
     tokens: dict = field(default_factory=dict)
-    model: Optional[str] = None
-    error: Optional[str] = None
+    model: str | None = None
+    error: str | None = None
 
     def to_dict(self) -> dict:
         return {"text": self.text, "raw": self.raw, "latency_ms": self.latency_ms,
@@ -60,9 +59,9 @@ class Provider(ABC):
 
     name = "provider"
 
-    def __init__(self, scope: Optional[AuthorizationScope] = None,
-                 model: Optional[str] = None, endpoint: Optional[str] = None,
-                 params: Optional[dict] = None) -> None:
+    def __init__(self, scope: AuthorizationScope | None = None,
+                 model: str | None = None, endpoint: str | None = None,
+                 params: dict | None = None) -> None:
         self.scope = scope
         self.model = model
         self.endpoint = endpoint

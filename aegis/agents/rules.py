@@ -8,8 +8,6 @@ keeps severity evidence-driven rather than arbitrary.
 
 from __future__ import annotations
 
-from typing import Optional
-
 from ..core.types import Confidence, FindingCategory, Observation, Severity
 
 # dimension.metric -> (threshold, direction, category, human title, impact)
@@ -82,7 +80,7 @@ def _severity(gap: float, conf: Confidence) -> Severity:
     return base
 
 
-def candidate_from_observation(obs: Observation) -> Optional[dict]:
+def candidate_from_observation(obs: Observation) -> dict | None:
     key = f"{obs.dimension}.{obs.metric}"
     spec = THRESHOLDS.get(key)
     if not spec:

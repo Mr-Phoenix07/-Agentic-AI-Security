@@ -1,0 +1,31 @@
+# AEGIS compose: run an assessment now, plus optional PostgreSQL for continuous
+# (multi-run, baseline-persisting) mode. The core runs fine without Postgres.
+
+services:
+  aegis:
+    build: .
+    image: aegis:latest
+    volumes:
+      - ./engagement.yaml:/work/engagement.yaml:ro   # provide your authorized config
+      - ./out:/work/aegis_runs
+    environment:
+      - AEGIS_API_KEY=${AEGIS_API_KEY:-}
+    # Edit the authorization scope in engagement.yaml before pointing at anything real.
+    command: ["run", "/work/engagement.yaml", "--fail-on", "high"]
+
+  # Optional: durable store for continuous validation & drift baselines.
+  # Point aegis's Database at this in a service deployment (see docs/DATABASE.md).
+  postgres:
+    image: postgres:16-alpine
+    profiles: ["continuous"]
+    environment:
+      POSTGRES_DB: aegis
+      POSTGRES_USER: aegis
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+    volumes:
+      - aegis_pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  aegis_pgdata:

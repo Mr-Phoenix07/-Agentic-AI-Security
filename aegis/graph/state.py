@@ -11,7 +11,6 @@ tracer) so agents don't reach for globals.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Optional
 
 from ..core.config import Config
 from ..core.events import MessageBus
@@ -68,7 +67,7 @@ class AssessmentState:
     trail: list[str] = field(default_factory=list)   # ordered agent execution log
     errors: list[dict] = field(default_factory=list)
 
-    def target(self, target_id: str) -> Optional[Target]:
+    def target(self, target_id: str) -> Target | None:
         return next((t for t in self.targets if t.id == target_id), None)
 
     def mem_for(self, target: Target) -> Memory:

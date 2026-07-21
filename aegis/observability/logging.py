@@ -10,8 +10,7 @@ from __future__ import annotations
 import json
 import logging
 import sys
-import time
-from typing import Any, Optional
+from typing import Any
 
 
 class JsonFormatter(logging.Formatter):
@@ -55,7 +54,7 @@ class BoundLogger:
         self._logger = logger
         self._ctx = ctx
 
-    def bind(self, **ctx) -> "BoundLogger":
+    def bind(self, **ctx) -> BoundLogger:
         return BoundLogger(self._logger, **{**self._ctx, **ctx})
 
     def _log(self, level: int, event: str, msg: str = "", **extra) -> None:

@@ -6,16 +6,14 @@ on demand so optional deps stay optional.
 
 from __future__ import annotations
 
-from typing import Optional
-
 from ..core.authorization import AuthorizationScope
 from .base import Provider, ProviderRequest, ProviderResponse
 from .mock import MockProvider
 
 
-def build_provider(kind: str, *, scope: Optional[AuthorizationScope] = None,
-                   model: Optional[str] = None, endpoint: Optional[str] = None,
-                   params: Optional[dict] = None) -> Provider:
+def build_provider(kind: str, *, scope: AuthorizationScope | None = None,
+                   model: str | None = None, endpoint: str | None = None,
+                   params: dict | None = None) -> Provider:
     """Factory mapping a provider key to an instance."""
     kind = (kind or "mock").lower()
     if kind == "mock":

@@ -18,8 +18,8 @@ deterministic, so adaptivity never compromises reproducibility.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable, Optional
 
 from ..core.config import LoopConfig
 from ..core.memory import Memory
@@ -27,7 +27,7 @@ from ..core.types import Observation, TargetKind
 from ..mutation.engine import MutationEngine, Seed
 from ..targets.base import Target
 from . import metrics
-from .behavioral import DIMENSIONS, Analyzer, ProbePair, default_analyzers
+from .behavioral import Analyzer, ProbePair, default_analyzers
 from .longcontext import default_longcontext_analyzers
 from .rag import default_rag_analyzers
 
@@ -79,13 +79,13 @@ class AdaptiveEvaluator:
     def __init__(
         self,
         target: Target,
-        engine: Optional[MutationEngine] = None,
-        analyzers: Optional[list[Analyzer]] = None,
-        memory: Optional[Memory] = None,
-        config: Optional[LoopConfig] = None,
-        on_probe: Optional[Callable[[object, object], None]] = None,
-        on_observation: Optional[Callable[[Observation], None]] = None,
-        progress: Optional[ProgressCb] = None,
+        engine: MutationEngine | None = None,
+        analyzers: list[Analyzer] | None = None,
+        memory: Memory | None = None,
+        config: LoopConfig | None = None,
+        on_probe: Callable[[object, object], None] | None = None,
+        on_observation: Callable[[Observation], None] | None = None,
+        progress: ProgressCb | None = None,
     ) -> None:
         self.target = target
         self.engine = engine or MutationEngine(seed=(config or LoopConfig()).seed)
@@ -220,7 +220,8 @@ class AdaptiveEvaluator:
         seen, out = set(), []
         for g in gaps:
             if g not in seen:
-                seen.add(g); out.append(g)
+                seen.add(g)
+                out.append(g)
         return out
 
     def _is_informative(self, o: Observation) -> bool:

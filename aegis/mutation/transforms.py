@@ -222,7 +222,8 @@ class OCRLikeFormatting(Transform):
         chars, n = [], 0
         for ch in text:
             if ch in self.SWAPS and rng.random() < 0.15:
-                chars.append(self.SWAPS[ch]); n += 1
+                chars.append(self.SWAPS[ch])
+                n += 1
             else:
                 chars.append(ch)
             if ch == " " and rng.random() < 0.1:

@@ -19,7 +19,6 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass
-from typing import Optional
 
 from ..storage.db import Database
 from .types import Observation
@@ -77,7 +76,7 @@ class Memory:
         self.db.set_baseline(self.target_key, dimension, metric, value, tolerance)
 
     def check_regression(self, dimension: str, metric: str,
-                         current: float) -> Optional[RegressionResult]:
+                         current: float) -> RegressionResult | None:
         base = self.db.get_baseline(self.target_key, dimension, metric)
         if not base:
             return None

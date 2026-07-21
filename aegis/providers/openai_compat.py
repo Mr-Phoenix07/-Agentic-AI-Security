@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Optional
 
 from ..core.authorization import AuthorizationScope
 from .base import Provider, ProviderRequest, ProviderResponse
@@ -27,9 +26,9 @@ class OpenAICompatProvider(Provider):
         self,
         endpoint: str,
         model: str,
-        scope: Optional[AuthorizationScope] = None,
+        scope: AuthorizationScope | None = None,
         api_key_env: str = "AEGIS_API_KEY",
-        params: Optional[dict] = None,
+        params: dict | None = None,
         timeout: float = 60.0,
     ) -> None:
         super().__init__(scope=scope, model=model, endpoint=endpoint, params=params)

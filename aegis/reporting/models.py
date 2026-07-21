@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from ..core.types import Finding, Severity, now_ts
+from ..core.types import Severity, now_ts
 
 
 def severity_weight(sev: str) -> int:
@@ -143,5 +143,6 @@ class ReportBuilder:
         seen, uniq = set(), []
         for t in out:
             if t not in seen:
-                seen.add(t); uniq.append(t)
+                seen.add(t)
+                uniq.append(t)
         return uniq

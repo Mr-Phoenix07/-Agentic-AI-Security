@@ -12,8 +12,8 @@ from __future__ import annotations
 
 import fnmatch
 from collections import defaultdict, deque
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable, Optional
 
 from .types import new_id, now_ts
 
@@ -30,7 +30,7 @@ class Message:
     sender: str = "system"
     payload: dict = field(default_factory=dict)
     id: str = field(default_factory=lambda: new_id("msg"))
-    correlation_id: Optional[str] = None    # ties a request to its responses
+    correlation_id: str | None = None    # ties a request to its responses
     ts: float = field(default_factory=now_ts)
 
 

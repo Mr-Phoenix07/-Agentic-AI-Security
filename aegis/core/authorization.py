@@ -23,7 +23,6 @@ import ipaddress
 import re
 import time
 from dataclasses import dataclass, field
-from typing import Optional
 from urllib.parse import urlparse
 
 
@@ -52,12 +51,12 @@ class ScopeRule:
     url_globs: list[str] = field(default_factory=list)
     model_ids: list[str] = field(default_factory=list)
     cidrs: list[str] = field(default_factory=list)
-    not_before: Optional[float] = None
-    not_after: Optional[float] = None
-    max_requests: Optional[int] = None
+    not_before: float | None = None
+    not_after: float | None = None
+    max_requests: int | None = None
     authorization_ref: str = ""
 
-    def active(self, at: Optional[float] = None) -> bool:
+    def active(self, at: float | None = None) -> bool:
         at = at if at is not None else time.time()
         if self.not_before is not None and at < self.not_before:
             return False
@@ -93,7 +92,7 @@ class ScopeRule:
 class ScopeDecision:
     allowed: bool
     reason: str
-    rule_label: Optional[str] = None
+    rule_label: str | None = None
 
 
 class AuthorizationScope:
@@ -105,7 +104,7 @@ class AuthorizationScope:
         scope.require_url("https://api.internal.example.com/v1/chat")   # raises if denied
     """
 
-    def __init__(self, rules: Optional[list[ScopeRule]] = None,
+    def __init__(self, rules: list[ScopeRule] | None = None,
                  dry_run: bool = False) -> None:
         self.rules: list[ScopeRule] = rules or []
         self.dry_run = dry_run
@@ -113,12 +112,12 @@ class AuthorizationScope:
 
     # -- construction ------------------------------------------------------- #
     @classmethod
-    def from_dict(cls, data: dict) -> "AuthorizationScope":
+    def from_dict(cls, data: dict) -> AuthorizationScope:
         rules = [ScopeRule(**r) for r in (data.get("rules") or [])]
         return cls(rules=rules, dry_run=bool(data.get("dry_run", False)))
 
     # -- evaluation --------------------------------------------------------- #
-    def _record_and_check_rate(self, rule: ScopeRule) -> Optional[str]:
+    def _record_and_check_rate(self, rule: ScopeRule) -> str | None:
         if rule.max_requests is None:
             return None
         n = self._request_counts.get(rule.label, 0) + 1

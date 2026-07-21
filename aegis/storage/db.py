@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import sqlite3
 from pathlib import Path
-from typing import Any, Iterable, Optional
+from typing import Any
 
 from ..core.types import (
     Evidence,
@@ -43,7 +43,7 @@ class Database:
         self.conn.commit()
         self.conn.close()
 
-    def __enter__(self) -> "Database":
+    def __enter__(self) -> Database:
         return self
 
     def __exit__(self, *a) -> None:
@@ -66,7 +66,7 @@ class Database:
         self.conn.commit()
 
     def add_target(self, aid: str, tid: str, kind: str, mode: str,
-                   model: Optional[str], endpoint: Optional[str], metadata: dict) -> None:
+                   model: str | None, endpoint: str | None, metadata: dict) -> None:
         self.conn.execute(
             "INSERT OR REPLACE INTO targets(id,assessment_id,kind,mode,model,endpoint,"
             "metadata_json) VALUES(?,?,?,?,?,?,?)",
@@ -94,7 +94,7 @@ class Database:
         for ev in result.evidence:
             self.save_evidence(aid, result.id, ev)
 
-    def save_evidence(self, aid: str, result_id: Optional[str], ev: Evidence) -> None:
+    def save_evidence(self, aid: str, result_id: str | None, ev: Evidence) -> None:
         self.conn.execute(
             "INSERT OR REPLACE INTO evidence(id,result_id,assessment_id,target_id,kind,"
             "summary,payload_json,reproduction_json,created_at) VALUES(?,?,?,?,?,?,?,?,?)",
@@ -123,7 +123,7 @@ class Database:
              _dumps(f.observation_ids), f.created_at))
 
     def save_metric(self, aid: str, name: str, value: float,
-                    target_id: Optional[str] = None) -> None:
+                    target_id: str | None = None) -> None:
         self.conn.execute(
             "INSERT INTO metrics(id,assessment_id,target_id,name,value,created_at) "
             "VALUES(?,?,?,?,?,?)",
@@ -176,7 +176,7 @@ class Database:
         self.conn.commit()
 
     def get_baseline(self, target_key: str, dimension: str,
-                     metric: str) -> Optional[dict]:
+                     metric: str) -> dict | None:
         cur = self.conn.execute(
             "SELECT * FROM baselines WHERE target_key=? AND dimension=? AND metric=?",
             (target_key, dimension, metric))

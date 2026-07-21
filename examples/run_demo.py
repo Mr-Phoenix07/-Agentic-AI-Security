@@ -9,8 +9,14 @@ where the report was written. Equivalent to ``aegis demo``.
 
 from __future__ import annotations
 
-from aegis.core.config import default_config
-from aegis.graph import run_assessment
+import sys
+from pathlib import Path
+
+# Allow running directly from a source checkout without installing.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from aegis.core.config import default_config  # noqa: E402
+from aegis.graph import run_assessment  # noqa: E402
 
 
 def main() -> None:

@@ -4,10 +4,10 @@ import json
 from pathlib import Path
 
 from aegis.agents import REGISTRY, WORKFLOW_ORDER
-from aegis.core.config import Config, LoopConfig, TargetConfig
 from aegis.core.authorization import localhost_scope
+from aegis.core.config import Config, LoopConfig, TargetConfig
 from aegis.graph import Phase, run_assessment
-from aegis.providers import build_provider, ProviderRequest
+from aegis.providers import ProviderRequest, build_provider
 
 
 def test_registry_has_23_named_agents():

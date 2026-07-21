@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import random
+
 from aegis.core.types import FindingCategory
 from aegis.mutation import MutationEngine, Seed, default_transforms
 from aegis.mutation.transforms import (
@@ -9,7 +11,6 @@ from aegis.mutation.transforms import (
     UnicodeNormalizationVariant,
     ZeroWidthInjection,
 )
-import random
 
 
 def _seed():

@@ -9,9 +9,9 @@ in-memory span recorder is used so the timeline is still queryable offline.
 from __future__ import annotations
 
 import time
+from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Iterator, Optional
 
 try:  # optional
     from opentelemetry import trace as _otel  # type: ignore
@@ -25,9 +25,9 @@ except Exception:  # pragma: no cover
 class SpanRecord:
     name: str
     start: float
-    end: Optional[float] = None
+    end: float | None = None
     attributes: dict = field(default_factory=dict)
-    children: list["SpanRecord"] = field(default_factory=list)
+    children: list[SpanRecord] = field(default_factory=list)
 
     @property
     def duration_ms(self) -> float:

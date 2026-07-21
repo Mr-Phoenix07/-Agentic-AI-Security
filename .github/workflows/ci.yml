@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install (dev extras)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Lint (ruff)
+        run: ruff check aegis tests
+        continue-on-error: true
+
+      - name: Compile all modules
+        run: python -c "import compileall,sys; sys.exit(0 if compileall.compile_dir('aegis', quiet=1) else 1)"
+
+      - name: Test (offline, no network/keys)
+        run: pytest -q
+
+      - name: Smoke the offline demo
+        run: |
+          python -m aegis.cli demo --rounds 2 --workdir ./_ci_demo
+          test -f ./_ci_demo/*/report.md && echo "report produced"
+
+      - name: Upload demo report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aegis-demo-report-${{ matrix.python-version }}
+          path: ./_ci_demo/**/report.*
+          if-no-files-found: ignore

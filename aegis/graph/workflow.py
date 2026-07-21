@@ -11,12 +11,10 @@ on that runtime — same agents, same order, richer tracing.
 from __future__ import annotations
 
 from enum import Enum
-from typing import Optional
 
 from ..agents import WORKFLOW_ORDER
 from ..core.config import Config
 from ..core.events import Message, MessageBus
-from ..core.memory import Memory
 from ..observability.logging import BoundLogger, get_logger
 from ..observability.tracing import Tracer
 from ..storage.db import Database
@@ -50,8 +48,8 @@ AGENT_PHASE: dict[str, Phase] = {
 }
 
 
-def build_state(config: Config, *, bus: Optional[MessageBus] = None,
-                db: Optional[Database] = None) -> AssessmentState:
+def build_state(config: Config, *, bus: MessageBus | None = None,
+                db: Database | None = None) -> AssessmentState:
     """Materialise durable handles + targets into an :class:`AssessmentState`."""
     logger = get_logger("aegis", level=config.log_level)
     db = db or Database(config.db_path)
@@ -78,8 +76,8 @@ class Orchestrator:
     responsibilities = ("Coordinate the agent collective across assessment phases, "
                         "enforce ordering, and surface progress.")
 
-    def __init__(self, agents: Optional[list] = None,
-                 progress: Optional[callable] = None) -> None:
+    def __init__(self, agents: list | None = None,
+                 progress: callable | None = None) -> None:
         self.agent_classes = agents or WORKFLOW_ORDER
         self.progress = progress or (lambda *_: None)
 
@@ -103,8 +101,8 @@ class Orchestrator:
         return state
 
 
-def run_assessment(config: Config, *, progress: Optional[callable] = None,
-                   bus: Optional[MessageBus] = None) -> AssessmentState:
+def run_assessment(config: Config, *, progress: callable | None = None,
+                   bus: MessageBus | None = None) -> AssessmentState:
     """One-call entrypoint: build state, run the orchestrator, return final state."""
     state = build_state(config, bus=bus)
     orch = Orchestrator(progress=progress)
@@ -138,7 +136,7 @@ def to_langgraph(config: Config):  # pragma: no cover - optional runtime
     for cls in WORKFLOW_ORDER:
         graph.add_node(cls.name, make_node(cls))
     graph.add_edge(START, names[0])
-    for a, b in zip(names, names[1:]):
+    for a, b in zip(names, names[1:], strict=False):
         graph.add_edge(a, b)
     graph.add_edge(names[-1], END)
     return graph.compile()

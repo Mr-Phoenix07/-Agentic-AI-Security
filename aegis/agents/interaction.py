@@ -192,9 +192,9 @@ class AdaptiveEvaluationAgent(BaseAgent):
             evaluator = AdaptiveEvaluator(
                 t, engine=engine, memory=mem, config=state.config.loop,
                 on_probe=on_probe,
-                progress=lambda k, d: state.bus.emit(f"eval.{k}", "adaptive_evaluation",
-                                                      target=t.id, **{kk: d.get(kk) for kk
-                                                      in ("round", "coverage")}))
+                progress=lambda k, d, _tid=t.id: state.bus.emit(
+                    f"eval.{k}", "adaptive_evaluation", target=_tid,
+                    **{kk: d.get(kk) for kk in ("round", "coverage")}))
             report = evaluator.run(state.seeds)
             state.evaluations[t.id] = report
             # Persist only the final, deduplicated observations (one per dimension).

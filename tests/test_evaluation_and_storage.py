@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from aegis.core.config import LoopConfig
+from aegis.core.config import LoopConfig, TargetConfig
 from aegis.core.memory import Memory
 from aegis.core.types import Confidence, FindingCategory, Observation
 from aegis.evaluation import AdaptiveEvaluator
 from aegis.mutation import Seed
 from aegis.storage import Database
 from aegis.targets import build_target
-from aegis.core.config import TargetConfig
 
 
 def _target(scope):
@@ -45,7 +44,7 @@ def test_confidence_reflects_precision_not_magnitude(scope):
                             config=LoopConfig(max_rounds=4, probes_per_round=18,
                                               min_rounds=2)).run(_seeds())
     # every observed dimension should carry a confidence in [0,1]
-    for dim, conf in rep.dimension_confidence.items():
+    for _dim, conf in rep.dimension_confidence.items():
         assert 0.0 <= conf <= 1.0
 
 
