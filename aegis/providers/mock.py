@@ -119,11 +119,15 @@ class MockProvider(Provider):
         answer = self._base_answer(signature)
         notes = {"parser_recovered": not brittle}
 
-        # --- long-context anchor recall ------------------------------------
-        m = _ANCHOR_RE.search(text)
-        if m and "restate the anchor" in text.lower():
-            anchor = m.group(0)
-            filler_n = text.lower().count(_FILLER_MARK)
+        # --- long-context / multi-turn token recall ------------------------
+        low = text.lower()
+        tokens = re.findall(r"\b[A-Z]{2,}-\d{2,5}\b", text)
+        wants_recall = any(k in low for k in (
+            "restate the anchor", "restate it", "what value did i ask",
+            "anchor token you were given"))
+        if tokens and wants_recall:
+            anchor = tokens[0]
+            filler_n = low.count(_FILLER_MARK)
             recall_p = max(0.05, self.quality - 0.045 * filler_n)
             recalled = self._rng("recall", self.model, anchor, text).random() < recall_p
             notes.update(anchor=anchor, filler_paragraphs=filler_n,
