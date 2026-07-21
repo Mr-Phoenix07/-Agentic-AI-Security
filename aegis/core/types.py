@@ -37,8 +37,19 @@ class Severity(str, Enum):
     def rank(self) -> int:
         return {"info": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}[self.value]
 
-    def __lt__(self, other: "Severity") -> bool:  # enables max()/sorting
+    # Order by rank, not by string value. All four operators are defined
+    # explicitly because ``str`` (our mixin) already provides lexical ones.
+    def __lt__(self, other: "Severity") -> bool:
         return self.rank < other.rank
+
+    def __le__(self, other: "Severity") -> bool:
+        return self.rank <= other.rank
+
+    def __gt__(self, other: "Severity") -> bool:
+        return self.rank > other.rank
+
+    def __ge__(self, other: "Severity") -> bool:
+        return self.rank >= other.rank
 
 
 class EvaluationMode(str, Enum):

@@ -84,15 +84,18 @@ class Provider(ABC):
 
     # -- public API --------------------------------------------------------- #
     def complete(self, req: ProviderRequest) -> ProviderResponse:
-        self._authorize(req)
-        merged = {**self.default_params, **(req.params or {})}
-        req = ProviderRequest(prompt=req.prompt, messages=req.messages,
-                              params=merged, model=req.model or self.model,
-                              endpoint=req.endpoint or self.endpoint)
         start = time.perf_counter()
         try:
+            # Authorization is enforced here: a refused request never reaches the
+            # underlying model. The refusal is surfaced as a visible, non-fatal
+            # error response so a single out-of-scope probe cannot abort a batch.
+            self._authorize(req)
+            merged = {**self.default_params, **(req.params or {})}
+            req = ProviderRequest(prompt=req.prompt, messages=req.messages,
+                                  params=merged, model=req.model or self.model,
+                                  endpoint=req.endpoint or self.endpoint)
             resp = self._complete(req)
-        except Exception as e:  # normalise provider errors
+        except Exception as e:  # normalise provider + authorization errors
             return ProviderResponse(error=f"{type(e).__name__}: {e}",
                                     latency_ms=(time.perf_counter() - start) * 1000)
         if not resp.latency_ms:

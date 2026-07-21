@@ -51,6 +51,12 @@ class MutationEngine:
         h = stable_hash(self.base_seed, *keys)
         return random.Random(int(h, 16))
 
+    @staticmethod
+    def _seed_key(seed: Seed) -> str:
+        # Key RNG on seed *content*, not its random id, so the same request text
+        # yields the same variants across processes and fresh Seed objects.
+        return stable_hash(seed.text)
+
     def apply_chain(self, seed: Seed, names: list[str], salt: int = 0) -> Variant:
         """Apply a chain of transforms. ``salt`` yields fresh-but-reproducible
         draws (used by the adaptive loop to sample new variants each round).
@@ -64,7 +70,7 @@ class MutationEngine:
             if t is None:                      # identity / pass-through control
                 lineage.append(name)
                 continue
-            rng = self._rng_for(seed.id, name, len(lineage), salt)
+            rng = self._rng_for(self._seed_key(seed), name, len(lineage), salt)
             res = t.apply(text, rng)
             text = res.text
             lineage.append(name)
@@ -96,7 +102,7 @@ class MutationEngine:
                 probes.append(self._to_probe(seed, Variant(seed.text, ["identity"],
                                                             {}, seed.id)))
             # Deterministic ordering of candidate transform chains.
-            rng = self._rng_for("plan", seed.id)
+            rng = self._rng_for("plan", self._seed_key(seed))
             chains = self._candidate_chains(rng, max_depth)
             count = 0
             for chain in chains:

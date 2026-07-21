@@ -17,10 +17,13 @@ shared :class:`~aegis.graph.state.AssessmentState`; and indirectly, by publishin
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
 
 from ..core.confidence import Confidence
 from ..core.events import Message
-from ..graph.state import AssessmentState
+
+if TYPE_CHECKING:  # avoid a runtime agents<->graph import cycle (type hint only)
+    from ..graph.state import AssessmentState
 
 
 class BaseAgent(ABC):
