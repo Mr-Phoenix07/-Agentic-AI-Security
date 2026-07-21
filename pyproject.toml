@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aegis-ai-security"
+version = "0.1.0"
+description = "AEGIS — Autonomous Agentic AI Security Assessment & Adversarial Evaluation Platform"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{ name = "Mr-Phoenix07" }]
+keywords = [
+    "ai-security", "red-team", "llm-evaluation", "adversarial-robustness",
+    "vapt", "rag-security", "agentic-ai", "mcp-security", "owasp", "mitre-atlas",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Security",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+]
+
+# The core platform intentionally has ZERO hard runtime dependencies so it runs
+# fully offline (a stated design principle). Everything below is optional and
+# runtime-detected with graceful degradation.
+dependencies = []
+
+[project.optional-dependencies]
+# Nicer config/report rendering + HTTP providers (all already common, all optional).
+extras = ["pyyaml>=6", "jinja2>=3", "requests>=2.28"]
+# Observability integrations.
+observability = ["opentelemetry-api", "opentelemetry-sdk", "mlflow", "arize-phoenix"]
+# Orchestration graph (falls back to a built-in state machine when absent).
+graph = ["langgraph", "langchain-core"]
+# Model-internals explainability (white-box). Falls back to behavioral-only.
+explain = ["transformer-lens", "shap", "captum", "bertviz", "torch"]
+# Interop with mature OSS eval/red-team tools.
+integrations = ["promptfoo", "deepeval", "inspect-ai", "garak", "textattack", "adversarial-robustness-toolbox"]
+# Test + lint tooling.
+dev = ["pytest>=7", "pytest-cov", "ruff", "mypy"]
+
+[project.scripts]
+aegis = "aegis.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/Mr-Phoenix07/-Agentic-AI-Security"
+
+[tool.setuptools.packages.find]
+include = ["aegis*"]
+
+[tool.setuptools.package-data]
+aegis = ["storage/*.sql", "reporting/templates/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501", "B008"]
