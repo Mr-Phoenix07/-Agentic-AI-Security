@@ -56,6 +56,13 @@ behavioural.
 **Framework mapping** — OWASP LLM/API/Web Top 10, ASVS, MITRE ATLAS, NIST AI RMF
 (`aegis/reporting/frameworks.py`).
 
+**Accuracy benchmark** — offline, ground-truth benchmark measuring detection
+precision/recall/F1 against self-contained fixtures (vulnerable + hardened-control
+cases), with documented coverage gaps reported separately. Implemented in
+`aegis/benchmark/`, queryable via `aegis benchmark`, documented in
+`docs/BENCHMARK.md`, with a generated report under
+`docs/proof-of-concept/benchmark/`.
+
 **Testing methodologies** — machine-readable, framework-mapped methodologies for
 Web Application & API pentesting (OWASP WSTG/PTES), Active Directory security
 assessment (MITRE ATT&CK, assumed-breach), and AI/LLM/agentic red-teaming (OWASP

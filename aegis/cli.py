@@ -163,6 +163,41 @@ def cmd_methodology(args) -> int:
     return 0
 
 
+def cmd_benchmark(args) -> int:
+    from .benchmark import run_suite
+
+    _print(f"AEGIS {__version__} accuracy benchmark (offline, mock provider)")
+    workdir = Path(args.workdir) if args.workdir else None
+    report = run_suite(seed=args.seed, workdir=workdir)
+    d = report.to_dict()
+    if args.json:
+        _print(json.dumps(d, indent=2))
+        return 0
+
+    t = d["totals"]
+    _print("")
+    _print(f"Implemented-detection accuracy over {t['graded_cases']} cases:")
+    _print(f"  precision={t['precision']:.3f}  recall={t['recall']:.3f}  "
+           f"f1={t['f1']:.3f}   (tp={t['tp']} fp={t['fp']} fn={t['fn']})")
+    _print("")
+    _print(f"  {'case':30s} {'kind':17s}  P     R     F1    tp fp fn")
+    for c in d["cases"]:
+        _print(f"  {c['case_id']:30s} {c['kind']:17s} "
+               f"{c['precision']:.2f}  {c['recall']:.2f}  {c['f1']:.2f}  "
+               f"{c['tp']:2d} {c['fp']:2d} {c['fn']:2d}")
+        for m in c["missed"]:
+            _print(f"      MISSED   {m}")
+        for s in c["spurious"]:
+            _print(f"      SPURIOUS {s}")
+    if d["coverage_gaps"]:
+        _print("")
+        _print("Documented coverage gaps (reported separately, not in headline):")
+        for c in d["coverage_gaps"]:
+            _print(f"  {c['case_id']:30s} recall={c['recall']:.2f}  "
+                   f"(needs live testing; see docs/METHODOLOGY_WEBAPP.md)")
+    return 0
+
+
 def cmd_agents(args) -> int:
     from .agents import WORKFLOW_ORDER
     from .graph.workflow import AGENT_PHASE
@@ -211,6 +246,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     a = sub.add_parser("agents", help="list the agent collective and workflow order")
     a.set_defaults(func=cmd_agents)
+
+    b = sub.add_parser("benchmark",
+                       help="measure detection accuracy (precision/recall/F1) on "
+                            "offline ground-truth fixtures")
+    b.add_argument("--seed", type=int, default=1337)
+    b.add_argument("--workdir", help="output directory for per-case runs")
+    b.add_argument("--json", action="store_true", help="emit the full report as JSON")
+    b.set_defaults(func=cmd_benchmark)
 
     me = sub.add_parser("methodology",
                         help="show the web-app / Active Directory / AI red-team methodologies")
