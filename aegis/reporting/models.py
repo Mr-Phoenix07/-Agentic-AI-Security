@@ -91,6 +91,7 @@ class ReportBuilder:
         rep.appendices = {
             "observation_count": len(observations),
             "observations": observations[:200],
+            "methodologies": self._methodology_reference(),
         }
         rep.executive_summary = self._exec_summary(engagement, counts, coverage, findings)
         return rep
@@ -130,6 +131,29 @@ class ReportBuilder:
                 "mitigations": mitigations,
             })
         return roadmap
+
+    def _methodology_reference(self) -> list[dict]:
+        """Compact summary of the built-in methodology knowledge base.
+
+        Ties each report back to the phased web-app / Active Directory / AI
+        red-team methodologies AEGIS ships (see ``aegis/methodology/``), so a
+        reader can trace coverage to a standards-mapped test plan.
+        """
+        try:
+            from .. import methodology as _meth
+        except Exception:
+            return []
+        return [
+            {
+                "id": m.id,
+                "title": m.title,
+                "domain": m.domain,
+                "phases": len(m.phases),
+                "techniques": m.technique_count(),
+                "references": m.references,
+            }
+            for m in _meth.list_methodologies()
+        ]
 
     def _regression(self, findings) -> list[str]:
         import json as _j

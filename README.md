@@ -68,7 +68,13 @@ aegis agents
 # 3. See reproducible prompt variants for any text
 aegis mutate "Explain how TLS certificate validation works." --count 8
 
-# 4. Run a real engagement from a config (edit the authorization scope first!)
+# 4. Browse the built-in testing methodologies (web-app, Active Directory, AI red-team)
+aegis methodology                       # list
+aegis methodology webapp                # OWASP WSTG-aligned web/API methodology
+aegis methodology active-directory      # MITRE ATT&CK-aligned AD methodology
+aegis methodology ai-redteam            # OWASP LLM/ASI + ATLAS AI red-team methodology
+
+# 5. Run a real engagement from a config (edit the authorization scope first!)
 aegis run examples/authorized_targets.yaml --fail-on high
 ```
 
@@ -149,6 +155,28 @@ surface are automatically elevated.
 
 ---
 
+## Testing methodologies
+
+AEGIS ships a **machine-readable, framework-mapped methodology knowledge base**
+([`aegis/methodology/`](aegis/methodology/)) covering the three domains it
+assesses. Each technique documents the assessment objective **and** the detection
+telemetry + mitigation that closes it — defensive by construction, no weaponized
+recipes — and every technique carries an industry-framework mapping. Query it with
+`aegis methodology`, and it is appended to every generated report (§11).
+
+| Methodology | Aligned to | Doc | Code |
+|-------------|-----------|-----|------|
+| **Web Application & API Pentesting** | OWASP WSTG v4.2, OWASP Top 10, API Top 10, ASVS, PTES, ATT&CK | [METHODOLOGY_WEBAPP](docs/METHODOLOGY_WEBAPP.md) | [`methodology/webapp.py`](aegis/methodology/webapp.py) |
+| **Active Directory Security Assessment** | MITRE ATT&CK, MS *Securing AD* / tiering, CISA, NIST 800-53 | [METHODOLOGY_ACTIVE_DIRECTORY](docs/METHODOLOGY_ACTIVE_DIRECTORY.md) | [`methodology/active_directory.py`](aegis/methodology/active_directory.py) |
+| **AI / LLM / Agentic Red-Teaming** | OWASP LLM Top 10, OWASP Agentic (ASI), MITRE ATLAS, NIST AI RMF | [METHODOLOGY_AI_REDTEAM](docs/METHODOLOGY_AI_REDTEAM.md) | [`methodology/ai_redteam.py`](aegis/methodology/ai_redteam.py) |
+
+The AI red-team methodology integrates the phased model from the
+[AI Red-Teaming Guide](https://github.com/requie/AI-Red-Teaming-Guide) and the
+engagement-pipeline shape from [redamon](https://github.com/samugit83/redamon),
+re-expressed inside AEGIS's authorization-gated, safe-by-construction model.
+
+---
+
 ## The adaptive evaluation loop
 
 ```
@@ -169,6 +197,7 @@ of any individual probe is fixed, so adaptivity never compromises reproducibilit
 ```
 aegis/
   core/          types · config · authorization gate · events · confidence · memory
+  methodology/   framework-mapped web-app · Active Directory · AI red-team methodologies
   mutation/      transform library + reproducible engine
   providers/     mock (offline) · OpenAI-compatible (Ollama/vLLM/gateways)
   targets/       LLM · RAG · Web/API · MCP target adapters
@@ -179,8 +208,9 @@ aegis/
   reporting/     framework mappings · report model · MD/HTML/JSON renderers
   observability/ structured logging · tracing (OpenTelemetry-optional)
   storage/       SQLite schema + persistence
-  cli.py         run · demo · mutate · scope-check · agents
-docs/            architecture, workflow, MCP, database, deployment, deliverables
+  cli.py         run · demo · mutate · scope-check · agents · methodology
+docs/            architecture, workflow, MCP, database, deployment, deliverables,
+                 methodology (web-app / Active Directory / AI red-team)
 tests/           48 offline tests
 examples/        authorized_targets.yaml · run_demo.py
 ```

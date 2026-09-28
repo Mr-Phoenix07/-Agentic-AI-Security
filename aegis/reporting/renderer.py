@@ -167,7 +167,22 @@ def render_markdown(report: Report) -> str:
         A("_No regression tests defined._")
     A("")
 
-    A("## 11. Appendices\n")
+    A("## 11. Assessment Methodology Reference\n")
+    meths = r.appendices.get("methodologies") or []
+    if meths:
+        A("Findings are produced against AEGIS's phased, standards-mapped "
+          "methodologies (queryable via `aegis methodology`):\n")
+        A("| Methodology | Domain | Phases | Techniques | Key frameworks |")
+        A("|-------------|--------|--------|------------|----------------|")
+        for m in meths:
+            fw = ", ".join(sorted(m.get("references", {}).keys()))
+            A(f"| {m.get('title')} | {m.get('domain')} | {m.get('phases')} | "
+              f"{m.get('techniques')} | {fw} |")
+    else:
+        A("_Methodology knowledge base unavailable._")
+    A("")
+
+    A("## 12. Appendices\n")
     A(f"- Observations recorded: {r.appendices.get('observation_count', 0)}")
     A("- Full machine-readable artifacts available in the JSON report and the "
       "SQLite assessment store (probes, responses, evidence, reproduction seeds).")
@@ -208,6 +223,13 @@ def render_html(report: Report) -> str:
     metric_rows = "".join(
         f"<tr><td><code>{html.escape(k)}</code></td><td>{v}</td></tr>"
         for k, v in sorted(r.metrics.items()))
+
+    meths = r.appendices.get("methodologies") or []
+    meth_rows = "".join(
+        f"<tr><td>{html.escape(m.get('title',''))}</td>"
+        f"<td><code>{html.escape(m.get('domain',''))}</code></td>"
+        f"<td>{m.get('phases',0)}</td><td>{m.get('techniques',0)}</td></tr>"
+        for m in meths) or '<tr><td colspan=4><em>none</em></td></tr>'
 
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
@@ -252,4 +274,8 @@ code{{background:var(--line);padding:1px 5px;border-radius:5px}}
 </table></div>
 <h2>Coverage</h2><p>Behavioural coverage:
 <strong>{r.coverage.get('mean',0):.0%}</strong> of measurable dimensions.</p>
+<h2>Assessment Methodology Reference</h2><div class="overflow"><table>
+<tr><th>Methodology</th><th>Domain</th><th>Phases</th><th>Techniques</th></tr>
+{meth_rows}</table></div>
+<p class="sub">Queryable via <code>aegis methodology</code> — OWASP WSTG · MITRE ATT&amp;CK · OWASP LLM/ASI · MITRE ATLAS · NIST AI RMF.</p>
 </div></body></html>"""

@@ -56,6 +56,15 @@ behavioural.
 **Framework mapping** — OWASP LLM/API/Web Top 10, ASVS, MITRE ATLAS, NIST AI RMF
 (`aegis/reporting/frameworks.py`).
 
+**Testing methodologies** — machine-readable, framework-mapped methodologies for
+Web Application & API pentesting (OWASP WSTG/PTES), Active Directory security
+assessment (MITRE ATT&CK, assumed-breach), and AI/LLM/agentic red-teaming (OWASP
+LLM & Agentic Top 10, ATLAS, NIST AI RMF). Defensive by construction — each
+technique pairs objective with detection + mitigation. Implemented in
+`aegis/methodology/`, queryable via `aegis methodology`, documented in
+`docs/METHODOLOGY_WEBAPP.md`, `docs/METHODOLOGY_ACTIVE_DIRECTORY.md`, and
+`docs/METHODOLOGY_AI_REDTEAM.md`, and appended to every report (§11).
+
 **Mitigations & regression tests for every confirmed finding** — attached by the
 Mitigation Recommendation agent from the framework knowledge base.
 
