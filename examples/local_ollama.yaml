@@ -1,0 +1,45 @@
+# Assess a self-owned local model served over Ollama's OpenAI-compatible API.
+#
+# ONLY assess models running on hardware you own or are explicitly authorized to
+# assess. The authorization scope below is fail-closed and enforced at runtime.
+#
+# Setup:
+#   ollama serve                       # OpenAI-compatible API on :11434
+#   ollama pull llama3.2               # or any model you have
+#   pip install -e ".[extras]"         # requests (HTTP provider) + pyyaml
+#   aegis run examples/local_ollama.yaml
+#
+# Other runtimes: change `endpoint` + `model`.
+#   vLLM        -> http://localhost:8000/v1
+#   LM Studio   -> http://localhost:1234/v1
+#   llama.cpp   -> http://localhost:8080/v1
+# Hosted gateway needing a key:  export AEGIS_API_KEY=sk-...   (sent as Bearer)
+
+engagement: "local-ollama-llm"
+log_level: "WARNING"
+
+authorization:
+  dry_run: false
+  rules:
+    - label: "self-owned-localhost"
+      hosts: ["localhost", "127.0.0.1"]
+      url_globs: ["http://localhost*", "http://127.0.0.1*"]
+      model_ids: ["*"]                        # narrow to your model id if you prefer
+      authorization_ref: "self-owned local machine"
+      max_requests: 100000
+
+loop:
+  max_rounds: 2            # start small (~minutes); raise to 4+ for deeper coverage
+  probes_per_round: 10
+  min_rounds: 1
+  coverage_target: 0.85
+  confidence_target: 0.75
+  seed: 1337               # reproducible
+
+targets:
+  - id: "local-llm"
+    kind: "api_llm"
+    provider: "openai_compat"
+    endpoint: "http://localhost:11434/v1"     # Ollama OpenAI-compatible endpoint
+    model: "llama3.2"                          # any model you've `ollama pull`ed
+    mode: "grey_box"

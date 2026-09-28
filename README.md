@@ -76,8 +76,45 @@ Run the tests:
 
 ```bash
 pip install pytest
-pytest -q            # 48 tests, fully offline
+pytest -q            # 51 tests, fully offline
 ```
+
+---
+
+## Running against a local model (Ollama / vLLM / LM Studio)
+
+Assess a **self-owned** local model over its OpenAI-compatible API — real HTTP,
+no cloud, no keys. [`examples/local_ollama.yaml`](examples/local_ollama.yaml) is
+ready to use:
+
+```bash
+ollama serve && ollama pull llama3.2      # OpenAI-compatible API on :11434
+pip install -e ".[extras]"                # requests + pyyaml
+aegis run examples/local_ollama.yaml
+```
+
+Point at another runtime by editing `endpoint`/`model` (vLLM `:8000/v1`, LM Studio
+`:1234/v1`, llama.cpp `:8080/v1`); for a hosted gateway that needs a key, export
+`AEGIS_API_KEY`. Every request still passes the fail-closed scope guard, so it
+only reaches the endpoint your config authorizes.
+
+**What to expect.** The phase/agent stream, then a summary and a report:
+
+```
+Findings: 3 | coverage: 88% | errors: 0
+Report:   aegis_runs/assess_<id>/report.md    (+ report.html / report.json / dashboard.json)
+```
+
+- Results reflect **your model**: a strong instruct model often clears the
+  thresholds (few or no findings — a valid, good outcome); smaller/quantized
+  models tend to surface long-context, formatting, or consistency findings.
+- **Coverage reads ~88% (7 of 8 dims), not 100%**, because the calibration (ECE)
+  analyzer looks for a literal `confidence: <0-1>` in the model's output — which
+  models don't emit unless asked. Add a seed that requests it to exercise that
+  dimension.
+- Every probe is a **real generation**: start with the small `loop` budget in the
+  example (~minutes), then raise `max_rounds`/`probes_per_round` for depth. Use
+  `--fail-on high` for a CI exit code.
 
 ---
 
@@ -181,7 +218,7 @@ aegis/
   storage/       SQLite schema + persistence
   cli.py         run · demo · mutate · scope-check · agents
 docs/            architecture, workflow, MCP, database, deployment, deliverables
-tests/           48 offline tests
+tests/           51 offline tests
 examples/        authorized_targets.yaml · run_demo.py
 ```
 
