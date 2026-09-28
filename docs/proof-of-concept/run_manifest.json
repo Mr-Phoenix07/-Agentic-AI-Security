@@ -1,0 +1,34 @@
+{
+  "run_at": "2026-09-28 06:31:20 UTC",
+  "assessment_started": "2026-09-28 06:31:16 UTC",
+  "assessment_finished": "2026-09-28 06:31:17 UTC",
+  "host": "Linux-6.18.44-fc-v37-x86_64-with-glibc2.39",
+  "python": "3.11.15",
+  "engagement": "aegis-poc-demo",
+  "findings": 6,
+  "coverage_mean": 1.0,
+  "report_paths": {
+    "markdown": "/home/user/-Agentic-AI-Security/docs/proof-of-concept/aegis_run/assess_b03248c7cd83/report.md",
+    "html": "/home/user/-Agentic-AI-Security/docs/proof-of-concept/aegis_run/assess_b03248c7cd83/report.html",
+    "json": "/home/user/-Agentic-AI-Security/docs/proof-of-concept/aegis_run/assess_b03248c7cd83/report.json",
+    "dir": "/home/user/-Agentic-AI-Security/docs/proof-of-concept/aegis_run/assess_b03248c7cd83",
+    "dashboard": "/home/user/-Agentic-AI-Security/docs/proof-of-concept/aegis_run/assess_b03248c7cd83/dashboard.json"
+  },
+  "methodologies": [
+    {
+      "id": "webapp",
+      "phases": 6,
+      "techniques": 11
+    },
+    {
+      "id": "active-directory",
+      "phases": 5,
+      "techniques": 9
+    },
+    {
+      "id": "ai-redteam",
+      "phases": 5,
+      "techniques": 8
+    }
+  ]
+}

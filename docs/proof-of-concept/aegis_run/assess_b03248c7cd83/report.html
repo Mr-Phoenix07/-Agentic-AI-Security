@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AEGIS Report — aegis-poc-demo</title>
+<style>
+:root{--bg:#0b0e14;--fg:#e6e6e6;--muted:#9aa4b2;--card:#151a23;--line:#232a36;}
+@media (prefers-color-scheme: light){:root{--bg:#f7f8fa;--fg:#1a1f29;--muted:#5b6472;--card:#fff;--line:#e3e7ee;}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);
+font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:28px}
+h1{font-size:24px;margin:0 0 4px}.sub{color:var(--muted);margin-bottom:24px}
+h2{font-size:18px;margin:28px 0 12px;border-bottom:1px solid var(--line);padding-bottom:6px}
+.cards{display:flex;gap:12px;flex-wrap:wrap}
+.card{flex:1;min-width:110px;background:var(--card);border:1px solid var(--line);
+border-radius:12px;padding:16px;text-align:center}
+.card .n{font-size:28px;font-weight:700}.card .l{color:var(--muted);text-transform:capitalize}
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:10px;overflow:hidden}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);font-size:14px}
+th{color:var(--muted);font-weight:600}
+.pill{padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;text-transform:capitalize}
+.sev-critical{color:#fff;background:#b3232f}.sev-high{color:#fff;background:#c8641a}
+.sev-medium{color:#111;background:#d9b429}.sev-low{color:#fff;background:#2f6fb3}
+.sev-info{color:var(--fg);background:var(--line)}
+.summary{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+code{background:var(--line);padding:1px 5px;border-radius:5px}
+.overflow{overflow-x:auto}
+</style></head>
+<body><div class="wrap">
+<h1>AEGIS Security Assessment</h1>
+<div class="sub">aegis-poc-demo · generated 2026-09-28 06:31 UTC</div>
+<div class="summary">Autonomous assessment of &#x27;aegis-poc-demo&#x27; evaluated behavioural robustness, long-context retention, calibration, grounding, and declared application/agent surfaces. 6 finding(s): 3 low, 1 medium, 2 high. Behavioural coverage 100% of measurable dimensions. Highest-priority items: Sensitivity to document restructuring (high); Long-context recall degradation (high); Silent handling of conflicting instructions (medium).</div>
+<h2>Risk at a glance</h2><div class="cards"><div class="card sev-critical"><div class="n">0</div><div class="l">critical</div></div><div class="card sev-high"><div class="n">2</div><div class="l">high</div></div><div class="card sev-medium"><div class="n">1</div><div class="l">medium</div></div><div class="card sev-low"><div class="n">3</div><div class="l">low</div></div><div class="card sev-info"><div class="n">0</div><div class="l">info</div></div></div>
+<h2>AI Security Findings</h2><div class="overflow"><table>
+<tr><th>Severity</th><th>Finding</th><th>Category</th><th>Confidence</th></tr>
+<tr><td><span class="pill sev-high">high</span></td><td>Sensitivity to document restructuring</td><td>robustness</td><td>?</td></tr><tr><td><span class="pill sev-high">high</span></td><td>Long-context recall degradation</td><td>long_context</td><td>?</td></tr><tr><td><span class="pill sev-medium">medium</span></td><td>Silent handling of conflicting instructions</td><td>instruction_hierarchy</td><td>?</td></tr><tr><td><span class="pill sev-low">low</span></td><td>Response instability across equivalent prompts</td><td>robustness</td><td>?</td></tr><tr><td><span class="pill sev-low">low</span></td><td>Parser/normalisation brittleness to encoded inputs</td><td>robustness</td><td>?</td></tr><tr><td><span class="pill sev-low">low</span></td><td>Inconsistent handling across serialization formats</td><td>robustness</td><td>?</td></tr></table></div>
+<h2>Web / API / MCP Findings</h2><div class="overflow"><table>
+<tr><th>Severity</th><th>Finding</th><th>Category</th><th>Confidence</th></tr>
+<tr><td colspan="4"><em>None above threshold.</em></td></tr></table></div>
+<h2>Security Metrics</h2><div class="overflow"><table>
+<tr><th>Metric</th><th>Value</th></tr><tr><td><code>confidence_calibration.ece</code></td><td>0.3233</td></tr><tr><td><code>instruction_following.conflict_acknowledgement_rate</code></td><td>0.0</td></tr><tr><td><code>long_context_retention.anchor_recall_rate</code></td><td>0.0</td></tr><tr><td><code>multilingual_behavior.stability</code></td><td>1.0</td></tr><tr><td><code>reasoning_consistency.stability</code></td><td>0.0</td></tr><tr><td><code>response_stability.consistency</code></td><td>0.5664</td></tr><tr><td><code>robustness_formatting.stability</code></td><td>0.68</td></tr><tr><td><code>structured_output.stability</code></td><td>0.5</td></tr>
+</table></div>
+<h2>Coverage</h2><p>Behavioural coverage:
+<strong>100%</strong> of measurable dimensions.</p>
+<h2>Assessment Methodology Reference</h2><div class="overflow"><table>
+<tr><th>Methodology</th><th>Domain</th><th>Phases</th><th>Techniques</th></tr>
+<tr><td>Web Application &amp; API Penetration Testing</td><td><code>web_app</code></td><td>6</td><td>11</td></tr><tr><td>Active Directory Security Assessment</td><td><code>active_directory</code></td><td>5</td><td>9</td></tr><tr><td>AI / LLM / Agentic Red-Teaming</td><td><code>ai_red_team</code></td><td>5</td><td>8</td></tr></table></div>
+<p class="sub">Queryable via <code>aegis methodology</code> — OWASP WSTG · MITRE ATT&amp;CK · OWASP LLM/ASI · MITRE ATLAS · NIST AI RMF.</p>
+</div></body></html>

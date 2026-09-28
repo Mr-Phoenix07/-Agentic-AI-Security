@@ -117,6 +117,87 @@ def cmd_scope_check(args) -> int:
     return 0
 
 
+def cmd_methodology(args) -> int:
+    from . import methodology as M
+
+    if args.export:
+        _print(json.dumps(M.to_dict(), indent=2))
+        return 0
+
+    if not args.name or args.name == "list":
+        _print("AEGIS assessment methodologies:\n")
+        for m in M.list_methodologies():
+            _print(f"  {m.id:18s} {m.title}")
+            _print(f"  {'':18s} {m.phase_count if hasattr(m,'phase_count') else len(m.phases)} phases · "
+                   f"{m.technique_count()} techniques · domain={m.domain}")
+            _print("")
+        _print("Show one with:  aegis methodology <id>   (e.g. webapp | active-directory | ai-redteam)")
+        _print("Export JSON:    aegis methodology --export")
+        return 0
+
+    meth = M.get_methodology(args.name)
+    if meth is None:
+        _print(f"Unknown methodology '{args.name}'. Known: "
+               + ", ".join(m.id for m in M.list_methodologies()))
+        return 2
+
+    if args.json:
+        _print(json.dumps(meth.to_dict(), indent=2))
+        return 0
+
+    _print(f"# {meth.title}  [{meth.id}]")
+    _print(f"{meth.summary}\n")
+    _print(f"⚖️  {meth.authorization_note}\n")
+    _print(f"{len(meth.phases)} phases · {meth.technique_count()} techniques\n")
+    for i, ph in enumerate(meth.phases, 1):
+        _print(f"{i}. {ph.name}  ({ph.id})")
+        _print(f"   goal: {ph.goal}")
+        for t in ph.techniques:
+            fw = "; ".join(f"{k}:{','.join(v)}" for k, v in t.frameworks.items())
+            _print(f"     - [{t.id}] {t.name}  (sev-hint={t.severity_hint.value})")
+            _print(f"         objective: {t.objective}")
+            if fw:
+                _print(f"         frameworks: {fw}")
+        _print("")
+    _print("References: " + ", ".join(f"{k} ({v})" for k, v in meth.references.items()))
+    return 0
+
+
+def cmd_benchmark(args) -> int:
+    from .benchmark import run_suite
+
+    _print(f"AEGIS {__version__} accuracy benchmark (offline, mock provider)")
+    workdir = Path(args.workdir) if args.workdir else None
+    report = run_suite(seed=args.seed, workdir=workdir)
+    d = report.to_dict()
+    if args.json:
+        _print(json.dumps(d, indent=2))
+        return 0
+
+    t = d["totals"]
+    _print("")
+    _print(f"Implemented-detection accuracy over {t['graded_cases']} cases:")
+    _print(f"  precision={t['precision']:.3f}  recall={t['recall']:.3f}  "
+           f"f1={t['f1']:.3f}   (tp={t['tp']} fp={t['fp']} fn={t['fn']})")
+    _print("")
+    _print(f"  {'case':30s} {'kind':17s}  P     R     F1    tp fp fn")
+    for c in d["cases"]:
+        _print(f"  {c['case_id']:30s} {c['kind']:17s} "
+               f"{c['precision']:.2f}  {c['recall']:.2f}  {c['f1']:.2f}  "
+               f"{c['tp']:2d} {c['fp']:2d} {c['fn']:2d}")
+        for m in c["missed"]:
+            _print(f"      MISSED   {m}")
+        for s in c["spurious"]:
+            _print(f"      SPURIOUS {s}")
+    if d["coverage_gaps"]:
+        _print("")
+        _print("Documented coverage gaps (reported separately, not in headline):")
+        for c in d["coverage_gaps"]:
+            _print(f"  {c['case_id']:30s} recall={c['recall']:.2f}  "
+                   f"(needs live testing; see docs/METHODOLOGY_WEBAPP.md)")
+    return 0
+
+
 def cmd_agents(args) -> int:
     from .agents import WORKFLOW_ORDER
     from .graph.workflow import AGENT_PHASE
@@ -165,6 +246,23 @@ def build_parser() -> argparse.ArgumentParser:
 
     a = sub.add_parser("agents", help="list the agent collective and workflow order")
     a.set_defaults(func=cmd_agents)
+
+    b = sub.add_parser("benchmark",
+                       help="measure detection accuracy (precision/recall/F1) on "
+                            "offline ground-truth fixtures")
+    b.add_argument("--seed", type=int, default=1337)
+    b.add_argument("--workdir", help="output directory for per-case runs")
+    b.add_argument("--json", action="store_true", help="emit the full report as JSON")
+    b.set_defaults(func=cmd_benchmark)
+
+    me = sub.add_parser("methodology",
+                        help="show the web-app / Active Directory / AI red-team methodologies")
+    me.add_argument("name", nargs="?",
+                    help="methodology id/alias: webapp | active-directory | ai-redteam "
+                         "(omit or 'list' to list all)")
+    me.add_argument("--json", action="store_true", help="emit the selected methodology as JSON")
+    me.add_argument("--export", action="store_true", help="emit the entire knowledge base as JSON")
+    me.set_defaults(func=cmd_methodology)
 
     return p
 

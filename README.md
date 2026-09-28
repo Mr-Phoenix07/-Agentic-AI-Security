@@ -68,7 +68,16 @@ aegis agents
 # 3. See reproducible prompt variants for any text
 aegis mutate "Explain how TLS certificate validation works." --count 8
 
-# 4. Run a real engagement from a config (edit the authorization scope first!)
+# 4. Browse the built-in testing methodologies (web-app, Active Directory, AI red-team)
+aegis methodology                       # list
+aegis methodology webapp                # OWASP WSTG-aligned web/API methodology
+aegis methodology active-directory      # MITRE ATT&CK-aligned AD methodology
+aegis methodology ai-redteam            # OWASP LLM/ASI + ATLAS AI red-team methodology
+
+# 5. Measure detection accuracy on offline ground-truth fixtures
+aegis benchmark                         # precision / recall / F1 summary
+
+# 6. Run a real engagement from a config (edit the authorization scope first!)
 aegis run examples/authorized_targets.yaml --fail-on high
 ```
 
@@ -149,6 +158,42 @@ surface are automatically elevated.
 
 ---
 
+## Testing methodologies
+
+AEGIS ships a **machine-readable, framework-mapped methodology knowledge base**
+([`aegis/methodology/`](aegis/methodology/)) covering the three domains it
+assesses. Each technique documents the assessment objective **and** the detection
+telemetry + mitigation that closes it — defensive by construction, no weaponized
+recipes — and every technique carries an industry-framework mapping. Query it with
+`aegis methodology`, and it is appended to every generated report (§11).
+
+| Methodology | Aligned to | Doc | Code |
+|-------------|-----------|-----|------|
+| **Web Application & API Pentesting** | OWASP WSTG v4.2, OWASP Top 10, API Top 10, ASVS, PTES, ATT&CK | [METHODOLOGY_WEBAPP](docs/METHODOLOGY_WEBAPP.md) | [`methodology/webapp.py`](aegis/methodology/webapp.py) |
+| **Active Directory Security Assessment** | MITRE ATT&CK, MS *Securing AD* / tiering, CISA, NIST 800-53 | [METHODOLOGY_ACTIVE_DIRECTORY](docs/METHODOLOGY_ACTIVE_DIRECTORY.md) | [`methodology/active_directory.py`](aegis/methodology/active_directory.py) |
+| **AI / LLM / Agentic Red-Teaming** | OWASP LLM Top 10, OWASP Agentic (ASI), MITRE ATLAS, NIST AI RMF | [METHODOLOGY_AI_REDTEAM](docs/METHODOLOGY_AI_REDTEAM.md) | [`methodology/ai_redteam.py`](aegis/methodology/ai_redteam.py) |
+
+The AI red-team methodology integrates the phased model from the
+[AI Red-Teaming Guide](https://github.com/requie/AI-Red-Teaming-Guide) and the
+engagement-pipeline shape from [redamon](https://github.com/samugit83/redamon),
+re-expressed inside AEGIS's authorization-gated, safe-by-construction model.
+
+---
+
+## Accuracy benchmark
+
+How accurate is the detection engine? AEGIS ships an **offline accuracy
+benchmark** ([`aegis/benchmark/`](aegis/benchmark/), `aegis benchmark`) that runs
+the platform against self-contained fixtures with **known ground truth** and
+reports precision / recall / F1 — the security-tool equivalent of a labelled test
+set. Hardened *control* cases (which should yield nothing) make the precision
+number meaningful, and honest **coverage gaps** (e.g. authenticated BOLA, which
+needs live testing) are reported separately rather than hidden. Fully offline: no
+network, keys, or external targets. See [docs/BENCHMARK.md](docs/BENCHMARK.md) and
+the [latest result](docs/proof-of-concept/benchmark/BENCHMARK_REPORT.md).
+
+---
+
 ## The adaptive evaluation loop
 
 ```
@@ -169,6 +214,8 @@ of any individual probe is fixed, so adaptivity never compromises reproducibilit
 ```
 aegis/
   core/          types · config · authorization gate · events · confidence · memory
+  methodology/   framework-mapped web-app · Active Directory · AI red-team methodologies
+  benchmark/     offline accuracy benchmark (ground-truth fixtures + scoring)
   mutation/      transform library + reproducible engine
   providers/     mock (offline) · OpenAI-compatible (Ollama/vLLM/gateways)
   targets/       LLM · RAG · Web/API · MCP target adapters
@@ -179,8 +226,9 @@ aegis/
   reporting/     framework mappings · report model · MD/HTML/JSON renderers
   observability/ structured logging · tracing (OpenTelemetry-optional)
   storage/       SQLite schema + persistence
-  cli.py         run · demo · mutate · scope-check · agents
-docs/            architecture, workflow, MCP, database, deployment, deliverables
+  cli.py         run · demo · mutate · scope-check · agents · methodology · benchmark
+docs/            architecture, workflow, MCP, database, deployment, deliverables,
+                 methodology (web-app / Active Directory / AI red-team)
 tests/           48 offline tests
 examples/        authorized_targets.yaml · run_demo.py
 ```

@@ -1,0 +1,211 @@
+{
+  "seed": 1337,
+  "generated_at": 1790578542.493475,
+  "totals": {
+    "tp": 7,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "graded_cases": 6,
+    "coverage_gap_cases": 1
+  },
+  "cases": [
+    {
+      "case_id": "web-exposed-ai-api",
+      "kind": "vulnerable",
+      "tp": 3,
+      "fp": 0,
+      "fn": 0,
+      "matched": [
+        "vuln-api:authorization -> Unauthenticated AI/inference endpoint",
+        "vuln-api:api_security -> AI endpoint without rate limiting",
+        "vuln-api:authorization -> Unauthenticated state-changing endpoint"
+      ],
+      "missed": [],
+      "spurious": [],
+      "reported": [
+        {
+          "target_id": "vuln-api",
+          "category": "authorization",
+          "severity": "high",
+          "title": "Unauthenticated AI/inference endpoint"
+        },
+        {
+          "target_id": "vuln-api",
+          "category": "api_security",
+          "severity": "medium",
+          "title": "AI endpoint without rate limiting"
+        },
+        {
+          "target_id": "vuln-api",
+          "category": "authorization",
+          "severity": "medium",
+          "title": "Unauthenticated state-changing endpoint"
+        }
+      ],
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "case_id": "mcp-open-surface",
+      "kind": "vulnerable",
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "matched": [
+        "vuln-mcp:mcp_exposure -> Unauthenticated MCP transport",
+        "vuln-mcp:mcp_exposure -> Side-effecting MCP tool without confirmation: send_email"
+      ],
+      "missed": [],
+      "spurious": [],
+      "reported": [
+        {
+          "target_id": "vuln-mcp",
+          "category": "mcp_exposure",
+          "severity": "high",
+          "title": "Unauthenticated MCP transport"
+        },
+        {
+          "target_id": "vuln-mcp",
+          "category": "mcp_exposure",
+          "severity": "high",
+          "title": "Side-effecting MCP tool without confirmation: send_email"
+        }
+      ],
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "case_id": "graphql-exposed-ai",
+      "kind": "vulnerable",
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "matched": [
+        "vuln-graphql:authorization -> Unauthenticated AI/inference endpoint"
+      ],
+      "missed": [],
+      "spurious": [],
+      "reported": [
+        {
+          "target_id": "vuln-graphql",
+          "category": "authorization",
+          "severity": "high",
+          "title": "Unauthenticated AI/inference endpoint"
+        }
+      ],
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "case_id": "web-hardened-control",
+      "kind": "hardened-control",
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "matched": [],
+      "missed": [],
+      "spurious": [],
+      "reported": [],
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "case_id": "mcp-hardened-control",
+      "kind": "hardened-control",
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "matched": [],
+      "missed": [],
+      "spurious": [],
+      "reported": [],
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "case_id": "llm-brittle-behavioural",
+      "kind": "vulnerable",
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "matched": [
+        "brittle-llm:robustness -> Response instability across equivalent prompts"
+      ],
+      "missed": [],
+      "spurious": [],
+      "reported": [
+        {
+          "target_id": "brittle-llm",
+          "category": "long_context",
+          "severity": "high",
+          "title": "Multi-turn context retention gap"
+        },
+        {
+          "target_id": "brittle-llm",
+          "category": "robustness",
+          "severity": "low",
+          "title": "Response instability across equivalent prompts"
+        },
+        {
+          "target_id": "brittle-llm",
+          "category": "robustness",
+          "severity": "low",
+          "title": "Parser/normalisation brittleness to encoded inputs"
+        },
+        {
+          "target_id": "brittle-llm",
+          "category": "robustness",
+          "severity": "high",
+          "title": "Sensitivity to document restructuring"
+        },
+        {
+          "target_id": "brittle-llm",
+          "category": "instruction_hierarchy",
+          "severity": "medium",
+          "title": "Silent handling of conflicting instructions"
+        },
+        {
+          "target_id": "brittle-llm",
+          "category": "long_context",
+          "severity": "high",
+          "title": "Long-context recall degradation"
+        },
+        {
+          "target_id": "brittle-llm",
+          "category": "confidence_calibration",
+          "severity": "low",
+          "title": "Poor confidence calibration"
+        }
+      ],
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    }
+  ],
+  "coverage_gaps": [
+    {
+      "case_id": "web-authenticated-bola-gap",
+      "kind": "coverage-gap",
+      "tp": 0,
+      "fp": 0,
+      "fn": 1,
+      "matched": [],
+      "missed": [
+        "bola-api:authorization"
+      ],
+      "spurious": [],
+      "reported": [],
+      "precision": 1.0,
+      "recall": 0.0,
+      "f1": 0.0
+    }
+  ]
+}

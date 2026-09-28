@@ -1,0 +1,100 @@
+{
+  "engagement": "aegis-poc-demo",
+  "assessment_id": "assess_b03248c7cd83",
+  "coverage": {
+    "mean": 1.0,
+    "dimension_confidence": {
+      "response_stability": 0.7298,
+      "robustness_formatting": 0.6561,
+      "reasoning_consistency": 0.6097,
+      "structured_output": 0.3001,
+      "multilingual_behavior": 0.2065,
+      "instruction_following": 0.2065,
+      "long_context_retention": 0.4385,
+      "confidence_calibration": 0.2691
+    }
+  },
+  "metrics": {
+    "response_stability.consistency": 0.5664,
+    "robustness_formatting.stability": 0.68,
+    "reasoning_consistency.stability": 0.0,
+    "structured_output.stability": 0.5,
+    "multilingual_behavior.stability": 1.0,
+    "instruction_following.conflict_acknowledgement_rate": 0.0,
+    "long_context_retention.anchor_recall_rate": 0.0,
+    "confidence_calibration.ece": 0.3233
+  },
+  "rounds": {
+    "mock-llm": [
+      {
+        "round": 0,
+        "coverage": 0.625,
+        "mean_confidence": 0.315,
+        "probes": 72,
+        "gaps": [
+          "reasoning_consistency",
+          "confidence_calibration",
+          "multilingual_behavior",
+          "response_stability",
+          "robustness_formatting",
+          "structured_output",
+          "instruction_following",
+          "long_context_retention"
+        ]
+      },
+      {
+        "round": 1,
+        "coverage": 0.875,
+        "mean_confidence": 0.385,
+        "probes": 72,
+        "gaps": [
+          "confidence_calibration",
+          "response_stability",
+          "robustness_formatting",
+          "reasoning_consistency",
+          "structured_output",
+          "multilingual_behavior",
+          "instruction_following",
+          "long_context_retention"
+        ]
+      },
+      {
+        "round": 2,
+        "coverage": 1.0,
+        "mean_confidence": 0.397,
+        "probes": 72,
+        "gaps": [
+          "response_stability",
+          "robustness_formatting",
+          "reasoning_consistency",
+          "structured_output",
+          "multilingual_behavior",
+          "instruction_following",
+          "long_context_retention",
+          "confidence_calibration"
+        ]
+      },
+      {
+        "round": 3,
+        "coverage": 1.0,
+        "mean_confidence": 0.427,
+        "probes": 72,
+        "gaps": [
+          "response_stability",
+          "robustness_formatting",
+          "reasoning_consistency",
+          "structured_output",
+          "multilingual_behavior",
+          "instruction_following",
+          "long_context_retention",
+          "confidence_calibration"
+        ]
+      }
+    ]
+  },
+  "finding_counts": {
+    "low": 3,
+    "high": 2,
+    "medium": 1
+  }
+}
