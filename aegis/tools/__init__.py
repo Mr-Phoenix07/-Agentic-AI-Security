@@ -25,13 +25,27 @@ from .execution import (
     ToolRunRecord,
     deny_all_approvals,
 )
+from .pipeline import (
+    PipelineBudget,
+    PipelineResult,
+    RecursiveScanner,
+    ScanNode,
+    TargetExpander,
+)
 from .registry import SelectedTool, SelectionPlan, TargetProfile, ToolRegistry
+from .runner import RunOutput, ToolRunner, ToolRunnerLike
 from .spec import (
     ParsedObservation,
     RiskLevel,
     ToolCategory,
     ToolInvocation,
     ToolSpec,
+)
+from .validation import (
+    ValidationRequest,
+    ValidationResult,
+    ValidationStatus,
+    Validator,
 )
 
 __all__ = [
@@ -40,4 +54,10 @@ __all__ = [
     "ToolExecutor", "ToolResult", "ToolRunRecord", "ToolExecutionError",
     "ApprovalCallback", "deny_all_approvals",
     "ToolSpec", "ToolInvocation", "ToolCategory", "RiskLevel", "ParsedObservation",
+    # runner + recursive scanning
+    "ToolRunner", "ToolRunnerLike", "RunOutput",
+    "RecursiveScanner", "PipelineBudget", "PipelineResult", "ScanNode",
+    "TargetExpander",
+    # approval-gated validation
+    "Validator", "ValidationRequest", "ValidationResult", "ValidationStatus",
 ]

@@ -269,8 +269,90 @@ def cmd_tools(args) -> int:
                "goes through the scope-gated, approval-gated ToolExecutor.")
         return 0
 
-    _print("usage: aegis tools {list|select} ...")
+    if args.tools_action == "scan":
+        return _cmd_tools_scan(args, reg)
+
+    _print("usage: aegis tools {list|select|scan} ...")
     return 2
+
+
+def _cmd_tools_scan(args, reg) -> int:
+    """Run the recursive, scope-bounded scanning pipeline from a config."""
+    from .core.config import Config
+    from .core.types import TargetKind
+    from .tools import (
+        PipelineBudget,
+        RecursiveScanner,
+        RiskLevel,
+        TargetProfile,
+        ToolExecutor,
+        ToolRunner,
+    )
+
+    cfg = Config.load(args.config)
+    if cfg.scope.is_empty:
+        _print("Refusing to scan: the config's authorization scope is empty "
+               "(fail-closed). Add explicit scope rules for authorized targets.")
+        return 2
+
+    live = bool(args.live)
+    approve = (lambda inv, spec, dec: True) if args.approve_active else None
+    executor = ToolExecutor(
+        cfg.scope, dry_run=not live, offline=bool(args.offline),
+        approval=approve, exploitation=False, credential_testing=False)
+    runner = ToolRunner(reg, executor, max_risk=RiskLevel.ACTIVE,
+                        engagement=cfg.engagement)
+    scanner = RecursiveScanner(runner, budget=PipelineBudget(
+        max_depth=args.max_depth, max_targets=args.max_targets))
+
+    # Seeds: explicit --target, else the web-ish targets from the config.
+    seeds: list = []
+    if args.target:
+        kind = TargetKind(args.kind) if args.kind else TargetKind.WEB_APP
+        p = TargetProfile(args.target, kind)
+        if args.signals:
+            p.add(*[s.strip() for s in args.signals.split(",") if s.strip()])
+        else:
+            p.add("http", "https", "web", "domain")
+        seeds.append(p)
+    else:
+        for t in cfg.targets:
+            if t.endpoint:
+                p = TargetProfile(t.endpoint, TargetKind(t.kind))
+                p.add("http", "https", "web")
+                seeds.append(p)
+    if not seeds:
+        _print("No seed targets (give --target or add targets with endpoints).")
+        return 2
+
+    res = scanner.run(seeds)
+    d = res.to_dict()
+    if args.json:
+        _print(json.dumps(d, indent=2))
+        return 0
+
+    mode = "LIVE" if live else "dry-run (validated, not executed)"
+    _print(f"Recursive scan [{mode}] · engagement={cfg.engagement}")
+    _print(f"seeds={len(seeds)}  scanned={d['counts']['targets']}  "
+           f"observations={d['counts']['observations']}  "
+           f"invocations={d['counts']['invocations']}  "
+           f"dropped_out_of_scope={d['counts']['dropped']}")
+    _print("")
+    for s in res.scanned:
+        _print(f"  depth {s['depth']}  {s['target']}  "
+               f"({s['observations']} obs · {s['reason']})")
+    if res.dropped_out_of_scope:
+        _print("\n  dropped (out of scope, never scanned):")
+        for x in res.dropped_out_of_scope:
+            _print(f"    - {x['target']}  ({x['reason']})")
+    _print(f"\nstop: {res.stop_reason}")
+    if not live:
+        _print("\nNote: dry-run selects & validates tool commands but executes "
+               "nothing, so no output is produced to recurse on. Use --live "
+               "against explicitly authorized targets (with tools installed) to "
+               "drive the recursive scan; every derived target is re-checked "
+               "against scope before it is touched.")
+    return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -346,6 +428,23 @@ def build_parser() -> argparse.ArgumentParser:
                     help="preview as if exploitation were authorized")
     ts.add_argument("--json", action="store_true")
     ts.set_defaults(func=cmd_tools)
+    tscan = tsub.add_parser(
+        "scan", help="run the recursive, scope-bounded scanning pipeline from a "
+                     "config (dry-run by default; --live executes)")
+    tscan.add_argument("config", help="engagement config (.yaml/.json) with scope")
+    tscan.add_argument("--target", help="override seed target (else config targets)")
+    tscan.add_argument("--kind", help="seed target kind (with --target)")
+    tscan.add_argument("--signals", help="comma-separated seed signals (with --target)")
+    tscan.add_argument("--max-depth", type=int, default=2)
+    tscan.add_argument("--max-targets", type=int, default=50)
+    tscan.add_argument("--offline", action="store_true",
+                       help="block network tools against non-local targets")
+    tscan.add_argument("--live", action="store_true",
+                       help="execute tools (authorized targets only); default is dry-run")
+    tscan.add_argument("--approve-active", action="store_true",
+                       help="grant approval for active-risk tools (still scope-gated)")
+    tscan.add_argument("--json", action="store_true")
+    tscan.set_defaults(func=cmd_tools)
 
     return p
 

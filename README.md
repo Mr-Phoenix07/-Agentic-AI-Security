@@ -193,7 +193,25 @@ aegis tools list
 
 # preview intelligent test selection for an observed target (planning only)
 aegis tools select --kind web_app --signals http,https,web,domain,graphql,jwt
+
+# recursive, scope-bounded scan (dry-run by default; --live executes)
+aegis tools scan engagement.yaml --target https://authorized.example --signals http,web,domain
 ```
+
+**Recursive scanning** ([`RecursiveScanner`](aegis/tools/pipeline.py)) chains
+tools so discoveries drive deeper scans (subdomains → live services → endpoints
+→ deeper scans). It stays safe because **every derived target is re-checked
+against the authorization scope before it can be scanned** (out-of-scope targets
+are dropped and audited, never touched) and the whole scan is bounded by hard
+depth / target / invocation budgets with cycle-proof dedup.
+
+**Approval-gated validation** ([`Validator`](aegis/tools/validation.py)) turns a
+lead into a confirmed finding *only when a controlled re-run produces evidence*.
+Non-destructive re-observation runs through the same gates; anything needing an
+exploitation/credential-class tool resolves to `MANUAL_REQUIRED` (a human,
+explicitly authorized, implements a scoped adapter) — AEGIS never auto-exploits.
+Even a `CONFIRMED` finding's severity stays provisional pending the risk engine
+and human review.
 
 The [`ToolExecutor`](aegis/tools/execution.py) enforces, for **every** run:
 fail-closed **scope validation** (out-of-scope targets never spawn a process),

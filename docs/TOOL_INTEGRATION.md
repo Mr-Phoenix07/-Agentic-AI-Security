@@ -123,6 +123,67 @@ decision, approval, risk level, dry-run flag, exit code, and outcome — satisfy
 the "record every tool call" requirement of the AI safety controls (§34) and the
 trust hierarchy *raw output → parsed observation → analysis → validated finding*.
 
+## Recursive scanning ([`pipeline.py`](../aegis/tools/pipeline.py))
+
+`RecursiveScanner` chains tools so discoveries drive deeper scans — subdomains →
+live HTTP services → discovered endpoints → deeper scans — without hand-feeding
+each step. It's a breadth-first loop over a `ToolRunner` (so every run still goes
+through the controlled executor).
+
+```bash
+# dry-run: selects & validates what it would run at each hop, executes nothing
+aegis tools scan engagement.yaml --target https://authorized.example --signals http,web,domain
+
+# live: executes against explicitly authorized targets (tools must be installed)
+aegis tools scan engagement.yaml --target https://authorized.example --live --approve-active
+```
+
+What keeps recursion safe rather than runaway:
+
+- **Every derived target is scope-checked before it can enter the frontier**
+  (`AuthorizationScope.allows_url`, a *non-mutating* check that doesn't consume
+  rate budget). A subdomain or endpoint a tool surfaces but scope doesn't cover
+  is **dropped and audited — never scanned**. Seeds are gated the same way.
+- **Hard budgets** — `PipelineBudget(max_depth, max_targets, max_invocations,
+  max_expansion_per_node)` — plus a visited-set that dedupes normalized targets,
+  so a cycle can't loop. When a budget trips, the scan stops and records why.
+- **Conservative expansion** — only a few well-understood observation kinds
+  (`subdomain`, `open_port`, `http_service`, `path`) derive new *scan* targets;
+  a `template_match` is a *finding candidate for validation*, not a new target.
+
+`PipelineResult` records the targets scanned (with depth + provenance), the
+parent→child edges, every dropped out-of-scope target, the invocation count, and
+the stop reason.
+
+## Approval-gated validation ([`validation.py`](../aegis/tools/validation.py))
+
+An observation is a lead, not a confirmed vulnerability. `Validator` adjudicates
+a lead into a `ValidationResult` **only when a controlled re-run produces
+evidence**, honoring the trust hierarchy. Two strategies, and the boundary is the
+point:
+
+- **Non-destructive re-observation** (default) — re-run the same class of *safe*
+  detection (`nuclei` by template id, `nmap` on the specific port, `httpx` on the
+  URL) and confirm the signal reproduces. Still scope- and approval-gated;
+  changes no state.
+- **Intrusive validation** (`sqlmap`/`hydra`/`metasploit` class) — these are
+  documentation-only contracts, so a lead needing one resolves to
+  **`MANUAL_REQUIRED`** with proposed steps for a human (or `REFUSED` if the class
+  isn't enabled). Never executed autonomously.
+
+Outcomes: `CONFIRMED` (reproduced, with `Evidence`), `NOT_REPRODUCED`,
+`INCONCLUSIVE` (e.g. ran in dry-run), `REFUSED` (scope/approval/policy), or
+`MANUAL_REQUIRED`. A `CONFIRMED` result can be promoted with `Validator.to_finding`
+— and even then **severity stays provisional**: the risk engine plus human review
+set final severity, per the rule that a model alone never does.
+
+```python
+from aegis.tools import ToolRunner, Validator, ValidationRequest
+v = Validator(ToolRunner(registry, executor))
+result = v.validate(ValidationRequest(observation=obs))   # obs from a scan
+# result.status -> CONFIRMED / NOT_REPRODUCED / INCONCLUSIVE / REFUSED / MANUAL_REQUIRED
+```
+
 ## Adding a tool
 
 Implement a `command_builder` (structured params → argv) and, optionally, a

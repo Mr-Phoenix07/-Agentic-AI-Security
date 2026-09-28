@@ -126,6 +126,19 @@ class AuthorizationScope:
             return f"rate/volume ceiling exceeded ({n} > {rule.max_requests})"
         return None
 
+    def allows_url(self, url: str) -> bool:
+        """Non-mutating scope test: does the URL fall within an active rule?
+
+        Unlike :meth:`check_url`, this does **not** count against any rate/volume
+        ceiling, so it is safe for *planning* decisions where no request is
+        actually sent (e.g. deciding whether a discovered target may enter a
+        recursive scan's frontier). Real sends must still go through
+        :meth:`check_url` / :meth:`require_url`, which enforce the volume caps.
+        """
+        if not url:
+            return False
+        return any(r.active() and r.matches_url(url) for r in self.rules)
+
     def check_url(self, url: str) -> ScopeDecision:
         if not url:
             return ScopeDecision(False, "empty URL")

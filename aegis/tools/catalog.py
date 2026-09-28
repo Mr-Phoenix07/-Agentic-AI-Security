@@ -88,6 +88,15 @@ def _build_nuclei(inv: ToolInvocation) -> list[str]:
         if not set(sev) <= allowed:
             raise ValueError("invalid severity filter")
         argv += ["-severity", ",".join(sev)]
+    # Targeted re-run for validation: restrict to a single template id. The id
+    # is validated so it can only ever be a template selector, never a flag or
+    # path traversal.
+    template_id = inv.opt("template_id")
+    if template_id:
+        tid = str(template_id)
+        if not all(c.isalnum() or c in "-_" for c in tid):
+            raise ValueError("invalid nuclei template id")
+        argv += ["-id", tid]
     return argv
 
 
@@ -206,6 +215,59 @@ def _parse_httpx(result: ToolResult) -> list[ParsedObservation]:
     return _parse_jsonl(result, kind="http_service")
 
 
+def _parse_subfinder(result: ToolResult) -> list[ParsedObservation]:
+    # one subdomain per line (text output).
+    obs: list[ParsedObservation] = []
+    seen: set[str] = set()
+    for i, line in enumerate(result.stdout.splitlines()):
+        host = line.strip().lower()
+        # keep it to plausible hostnames; ignore banners/noise
+        if not host or " " in host or "." not in host or host in seen:
+            continue
+        seen.add(host)
+        obs.append(ParsedObservation(kind="subdomain", value=host,
+                                     detail={"host": host}, raw_ref=f"line:{i}"))
+    return obs
+
+
+def _parse_ffuf(result: ToolResult) -> list[ParsedObservation]:
+    # ffuf -of json emits a single JSON object with a "results" array.
+    obs: list[ParsedObservation] = []
+    try:
+        doc = json.loads(result.stdout or "{}")
+    except Exception:
+        return obs
+    for j, r in enumerate(doc.get("results", []) if isinstance(doc, dict) else []):
+        if not isinstance(r, dict):
+            continue
+        url = r.get("url") or r.get("input", {}).get("FUZZ")
+        if not url:
+            continue
+        obs.append(ParsedObservation(
+            kind="path", value=str(url),
+            detail={"url": url, "status": r.get("status"),
+                    "length": r.get("length")},
+            raw_ref=f"result:{j}"))
+    return obs
+
+
+def _parse_gobuster(result: ToolResult) -> list[ParsedObservation]:
+    # lines like "/admin                (Status: 200) [Size: 1234]"
+    obs: list[ParsedObservation] = []
+    for i, line in enumerate(result.stdout.splitlines()):
+        s = line.strip()
+        if not s.startswith("/"):
+            continue
+        path = s.split()[0]
+        status = ""
+        if "Status:" in s:
+            status = s.split("Status:", 1)[1].split(")")[0].strip()
+        obs.append(ParsedObservation(kind="path", value=path,
+                                     detail={"path": path, "status": status},
+                                     raw_ref=f"line:{i}"))
+    return obs
+
+
 # --------------------------------------------------------------------------- #
 # The catalog
 # --------------------------------------------------------------------------- #
@@ -219,7 +281,7 @@ def default_catalog() -> list[ToolSpec]:
             risk_level=RiskLevel.PASSIVE, supported_targets=_WEB,
             applies_when=("domain",), evidence_format="text",
             input_schema={"target": "apex domain (authorized)"},
-            command_builder=_build_subfinder,
+            command_builder=_build_subfinder, parser=_parse_subfinder,
             references=("https://github.com/projectdiscovery/subfinder",),
         ),
         # -- network -------------------------------------------------------- #
@@ -268,7 +330,7 @@ def default_catalog() -> list[ToolSpec]:
             risk_level=RiskLevel.ACTIVE, supported_targets=_WEB,
             applies_when=("http", "https", "web"), evidence_format="json",
             input_schema={"target": "base URL", "wordlist": "path to operator wordlist"},
-            command_builder=_build_ffuf,
+            command_builder=_build_ffuf, parser=_parse_ffuf,
             references=("https://github.com/ffuf/ffuf",),
         ),
         ToolSpec(
@@ -277,7 +339,7 @@ def default_catalog() -> list[ToolSpec]:
             risk_level=RiskLevel.ACTIVE, supported_targets=_WEB,
             applies_when=("http", "https", "web"), evidence_format="text",
             input_schema={"target": "base URL", "wordlist": "path to operator wordlist"},
-            command_builder=_build_gobuster,
+            command_builder=_build_gobuster, parser=_parse_gobuster,
             references=("https://github.com/OJ/gobuster",),
         ),
         # -- static analysis (local, no network) ---------------------------- #
