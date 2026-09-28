@@ -16,7 +16,6 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from pathlib import Path
 
 from . import __version__
 
@@ -40,7 +39,7 @@ def cmd_run(args) -> int:
 
     cfg = Config.load(args.config)
     if args.workdir:
-        cfg.workdir = Path(args.workdir)
+        cfg.set_workdir(args.workdir)
     if cfg.scope.is_empty:
         _print("ERROR: authorization scope is empty (fail-closed). Add rules for "
                "systems you own or are authorized to assess.")
@@ -74,7 +73,7 @@ def cmd_demo(args) -> int:
 
     cfg = default_config("aegis-offline-demo")
     if args.workdir:
-        cfg.workdir = Path(args.workdir)
+        cfg.set_workdir(args.workdir)
     cfg.loop.max_rounds = args.rounds
     _print(f"AEGIS {__version__} offline demo (mock target, no network/keys)")
     state = run_assessment(cfg, progress=_progress_printer())

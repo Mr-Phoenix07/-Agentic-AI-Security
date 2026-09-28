@@ -57,12 +57,28 @@ class Config:
     loop: LoopConfig = field(default_factory=LoopConfig)
     log_level: str = "INFO"
     raw: dict = field(default_factory=dict)
+    # True when db_path was supplied explicitly (so set_workdir won't move it).
+    _db_path_explicit: bool = field(default=False, init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.workdir = Path(self.workdir)
+        self._db_path_explicit = self.db_path is not None
         if self.db_path is None:
             self.db_path = self.workdir / "aegis.db"
         self.db_path = Path(self.db_path)
+
+    def set_workdir(self, workdir: str | os.PathLike) -> Config:
+        """Repoint the run at a new working directory.
+
+        The derived SQLite store moves with it so reports and the assessment DB
+        stay together — unless an explicit ``db_path`` was configured, which is
+        respected. Prefer this over assigning ``workdir`` directly (a bare
+        assignment leaves the DB at its original location).
+        """
+        self.workdir = Path(workdir)
+        if not self._db_path_explicit:
+            self.db_path = self.workdir / "aegis.db"
+        return self
 
     # -- loaders ------------------------------------------------------------ #
     @classmethod
