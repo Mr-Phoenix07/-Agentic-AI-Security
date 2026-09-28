@@ -139,3 +139,31 @@ CREATE TABLE IF NOT EXISTS baselines (
     created_at  REAL NOT NULL,
     UNIQUE (target_key, dimension, metric)
 );
+
+-- Immutable audit trail for external tool invocations (spec §21/§26/§34).
+-- Every attempt — allowed, refused, or errored — is recorded here. Rows are
+-- append-only by convention; the platform never updates or deletes them.
+CREATE TABLE IF NOT EXISTS tool_runs (
+    id             TEXT PRIMARY KEY,
+    assessment_id  TEXT,                 -- nullable: runs may precede an assessment
+    tool           TEXT NOT NULL,
+    binary         TEXT NOT NULL,
+    target         TEXT NOT NULL,
+    engagement     TEXT,
+    requested_by   TEXT,
+    reason         TEXT,
+    argv_json      TEXT NOT NULL,
+    scope_allowed  INTEGER NOT NULL,     -- 0/1
+    scope_reason   TEXT,
+    risk_level     TEXT,
+    approved       INTEGER NOT NULL,     -- 0/1
+    dry_run        INTEGER NOT NULL,     -- 0/1
+    executed       INTEGER NOT NULL,     -- 0/1
+    exit_code      INTEGER,
+    duration_s     REAL,
+    outcome        TEXT NOT NULL,        -- allowed|executed|refused|errored
+    detail         TEXT,
+    created_at     REAL NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_tool_runs_assessment ON tool_runs(assessment_id);
+CREATE INDEX IF NOT EXISTS idx_tool_runs_outcome ON tool_runs(outcome);

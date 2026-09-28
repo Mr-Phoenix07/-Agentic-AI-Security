@@ -211,6 +211,68 @@ def cmd_agents(args) -> int:
     return 0
 
 
+def cmd_tools(args) -> int:
+    from .core.types import TargetKind
+    from .tools import ToolCategory, ToolRegistry
+    from .tools.registry import TargetProfile
+
+    reg = ToolRegistry()
+
+    if args.tools_action == "list":
+        specs = reg.all()
+        if args.category:
+            try:
+                cat = ToolCategory(args.category)
+            except ValueError:
+                _print(f"unknown category '{args.category}'. Known: "
+                       + ", ".join(c.value for c in ToolCategory))
+                return 2
+            specs = [s for s in specs if s.category == cat]
+        if args.json:
+            _print(json.dumps([s.to_dict() for s in specs], indent=2))
+            return 0
+        _print(f"AEGIS tool registry ({len(specs)} tools):\n")
+        _print(f"  {'tool':12s} {'category':16s} {'risk':10s} {'exec':5s} purpose")
+        for s in sorted(specs, key=lambda x: (x.category.value, x.name)):
+            _print(f"  {s.name:12s} {s.category.value:16s} "
+                   f"{s.risk_level.name.lower():10s} "
+                   f"{'yes' if s.executable else 'DOC':5s} {s.purpose}")
+        _print("\n'DOC' = documentation-only contract: relevant for planning but "
+               "never auto-runnable (a human must implement & authorize the adapter).")
+        return 0
+
+    if args.tools_action == "select":
+        try:
+            kind = TargetKind(args.kind)
+        except ValueError:
+            _print(f"unknown target kind '{args.kind}'. Known: "
+                   + ", ".join(k.value for k in TargetKind))
+            return 2
+        profile = TargetProfile(target=args.target or "authorized-target", kind=kind)
+        if args.signals:
+            profile.add(*[s.strip() for s in args.signals.split(",") if s.strip()])
+        plan = reg.select(profile, credential_testing=args.credential,
+                          exploitation=args.exploitation)
+        if args.json:
+            _print(json.dumps(plan.to_dict(), indent=2))
+            return 0
+        _print(f"Test-selection plan for kind={plan.kind} "
+               f"signals={plan.signals or '[]'}\n")
+        for s in plan.selected:
+            tag = "RUN " if s.runnable else "adv "
+            _print(f"  [{tag}] {s.spec.name:12s} {s.spec.risk_level.name.lower():10s} "
+                   f"— {s.reason}")
+        _print(f"\n{len(plan.runnable_specs())} runnable · "
+               f"{len(plan.selected) - len(plan.runnable_specs())} advisory · "
+               f"{len(plan.excluded)} excluded")
+        _print("\nNote: selection is planning only — nothing is executed. Execution "
+               "goes through the scope-gated, approval-gated ToolExecutor.")
+        return 0
+
+    _print("usage: aegis tools {list|select} ...")
+    return 2
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="aegis",
@@ -263,6 +325,27 @@ def build_parser() -> argparse.ArgumentParser:
     me.add_argument("--json", action="store_true", help="emit the selected methodology as JSON")
     me.add_argument("--export", action="store_true", help="emit the entire knowledge base as JSON")
     me.set_defaults(func=cmd_methodology)
+
+    t = sub.add_parser("tools",
+                       help="inventory the tool registry and preview intelligent "
+                            "test selection (planning only; never executes)")
+    tsub = t.add_subparsers(dest="tools_action", required=True)
+    tl = tsub.add_parser("list", help="list registered tool adapters")
+    tl.add_argument("--category", help="filter by capability category")
+    tl.add_argument("--json", action="store_true")
+    tl.set_defaults(func=cmd_tools)
+    ts = tsub.add_parser("select",
+                         help="preview which tools apply to an observed target")
+    ts.add_argument("--kind", default="web_app", help="target kind (see TargetKind)")
+    ts.add_argument("--signals", help="comma-separated observed signals "
+                                       "(e.g. http,https,graphql,jwt,domain)")
+    ts.add_argument("--target", help="target label for the plan (not contacted)")
+    ts.add_argument("--credential", action="store_true",
+                    help="preview as if credential_testing were authorized")
+    ts.add_argument("--exploitation", action="store_true",
+                    help="preview as if exploitation were authorized")
+    ts.add_argument("--json", action="store_true")
+    ts.set_defaults(func=cmd_tools)
 
     return p
 

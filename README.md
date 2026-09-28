@@ -180,6 +180,35 @@ re-expressed inside AEGIS's authorization-gated, safe-by-construction model.
 
 ---
 
+## Controlled external-tool integration
+
+AEGIS orchestrates external tooling (Nmap, Nuclei, httpx, ffuf, Semgrep, Trivy,
+…) — but the language model never authors a command line. Every tool passes
+through **one controlled, auditable choke point** with a standardized adapter
+contract, so "AI + Kali tools" glue becomes safe by construction.
+
+```bash
+# inventory the registry (executable adapters vs documentation-only contracts)
+aegis tools list
+
+# preview intelligent test selection for an observed target (planning only)
+aegis tools select --kind web_app --signals http,https,web,domain,graphql,jwt
+```
+
+The [`ToolExecutor`](aegis/tools/execution.py) enforces, for **every** run:
+fail-closed **scope validation** (out-of-scope targets never spawn a process),
+**no-shell** argv built from typed params, **dry-run by default**, **human
+approval gates** for active/intrusive tools, offline-mode network blocking,
+engagement-level `exploitation` / `credential_testing` switches (default off),
+and an **immutable audit record** (`tool_runs`) for allowed, refused, and errored
+attempts alike. Exploitation / credential / DoS tools are **documentation-only
+contracts** — present for planning, never auto-runnable until a human implements
+and authorizes a scoped adapter. See
+[`docs/TOOL_INTEGRATION.md`](docs/TOOL_INTEGRATION.md) and
+[`aegis/tools/`](aegis/tools/).
+
+---
+
 ## Accuracy benchmark
 
 How accurate is the detection engine? AEGIS ships an **offline accuracy
