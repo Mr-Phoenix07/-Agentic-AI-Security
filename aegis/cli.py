@@ -25,6 +25,11 @@ def _print(msg: str = "") -> None:
     print(msg, file=sys.stdout, flush=True)
 
 
+def _host_of(url: str) -> str:
+    from urllib.parse import urlsplit
+    return urlsplit(url).hostname or url
+
+
 def _progress_printer():
     def cb(kind, data):
         if kind == "phase":
@@ -163,6 +168,65 @@ def cmd_methodology(args) -> int:
     return 0
 
 
+def cmd_probe(args) -> int:
+    from .active import SafeHTTPProbe
+    from .core.config import Config
+
+    # Resolve the authorization scope. A scope is REQUIRED and fail-closed: an
+    # out-of-scope URL is refused and never contacted.
+    if args.config:
+        scope = Config.load(args.config).scope
+    elif args.i_am_authorized:
+        from .core.authorization import AuthorizationScope, ScopeRule
+        host = _host_of(args.url)
+        scope = AuthorizationScope([ScopeRule(
+            label="cli-authorized", hosts=[host],
+            url_globs=[f"http://{host}*", f"https://{host}*"],
+            authorization_ref=args.i_am_authorized)])
+    else:
+        _print("ERROR: authorization required. Pass --config <engagement.yaml> "
+               "(recommended) or --i-am-authorized '<SoW/ticket ref>' to attest "
+               "you are authorized to actively probe this host.")
+        return 2
+
+    if scope.is_empty:
+        _print("ERROR: authorization scope is empty (fail-closed).")
+        return 2
+
+    probe = SafeHTTPProbe(scope, target_id=args.url, max_requests=args.max_requests)
+    _print(f"AEGIS active recon (non-destructive, GET/HEAD only) -> {args.url}")
+    outcome = probe.probe(args.url)
+
+    if args.json:
+        _print(json.dumps({
+            "target": outcome.target,
+            "requests_made": outcome.requests_made,
+            "denied": outcome.denied,
+            "errors": outcome.errors,
+            "checks": [c.__dict__ for c in outcome.checks],
+            "findings": [f.to_dict() for f in outcome.findings],
+        }, indent=2, default=str))
+        return 0
+
+    if outcome.denied:
+        for d in outcome.denied:
+            _print(f"  DENIED (out of scope): {d}")
+    _print(f"  requests: {outcome.requests_made}  checks: {len(outcome.checks)}  "
+           f"findings: {len(outcome.findings)}")
+    for c in outcome.checks:
+        mark = {"pass": "·", "finding": "!", "info": "i", "error": "x"}.get(c.status, "?")
+        _print(f"    [{mark}] {c.check:22s} {c.detail}")
+    if outcome.findings:
+        _print("")
+        for f in sorted(outcome.findings, key=lambda x: -x.severity.rank):
+            _print(f"  [{f.severity.value:8s}] {f.title}")
+    if outcome.errors:
+        _print("")
+        for e in outcome.errors:
+            _print(f"  note: {e}")
+    return 1 if any(f.severity.rank >= 3 for f in outcome.findings) else 0
+
+
 def cmd_benchmark(args) -> int:
     from .benchmark import run_suite
 
@@ -246,6 +310,18 @@ def build_parser() -> argparse.ArgumentParser:
 
     a = sub.add_parser("agents", help="list the agent collective and workflow order")
     a.set_defaults(func=cmd_agents)
+
+    pr = sub.add_parser("probe",
+                        help="safe active HTTP recon of an AUTHORIZED web target "
+                             "(non-destructive; GET/HEAD only)")
+    pr.add_argument("url", help="base URL of the authorized target")
+    pr.add_argument("--config", help="engagement config providing the authz scope")
+    pr.add_argument("--i-am-authorized", metavar="REF",
+                    help="attest authorization (SoW/ticket ref) to scope this host "
+                         "when no --config is given")
+    pr.add_argument("--max-requests", type=int, default=20)
+    pr.add_argument("--json", action="store_true")
+    pr.set_defaults(func=cmd_probe)
 
     b = sub.add_parser("benchmark",
                        help="measure detection accuracy (precision/recall/F1) on "

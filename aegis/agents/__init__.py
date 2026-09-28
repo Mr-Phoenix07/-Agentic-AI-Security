@@ -1,13 +1,15 @@
 """The AEGIS agent collective.
 
-Twenty-three specialized, collaborating agents. ``WORKFLOW_ORDER`` is the
-canonical dependency-respecting execution sequence; each agent's ``should_run``
-gates it per target kind, so the same order serves LLM, RAG, web, API, and MCP
-assessments.
+Twenty-four specialized, collaborating agents (the core twenty-three plus the
+opt-in :class:`ActiveReconAgent`). ``WORKFLOW_ORDER`` is the canonical
+dependency-respecting execution sequence; each agent's ``should_run`` gates it
+per target kind, so the same order serves LLM, RAG, web, API, and MCP
+assessments — and, when explicitly enabled, safe live web reconnaissance.
 """
 
 from __future__ import annotations
 
+from .active_recon import ActiveReconAgent
 from .analysis import (
     APISecurityAgent,
     ControlledValidationAgent,
@@ -54,6 +56,7 @@ WORKFLOW_ORDER: list[type[BaseAgent]] = [
     LongContextAgent,
     RAGAnalysisAgent,
     InformationVerificationAgent,
+    ActiveReconAgent,
     APISecurityAgent,
     VulnerabilityAssessmentAgent,
     ControlledValidationAgent,

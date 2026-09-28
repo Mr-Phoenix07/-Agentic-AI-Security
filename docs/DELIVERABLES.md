@@ -56,6 +56,12 @@ behavioural.
 **Framework mapping** — OWASP LLM/API/Web Top 10, ASVS, MITRE ATLAS, NIST AI RMF
 (`aegis/reporting/frameworks.py`).
 
+**Active reconnaissance** — safe, authorization-gated live HTTP recon (headers,
+TLS, cookies, CORS, banners, exposed `.git`/`.env`/`server-status`), GET/HEAD only,
+non-destructive, no exploitation. Implemented in `aegis/active/` + `ActiveReconAgent`,
+run via `aegis probe` or `active_probe: true` on a web target, documented in
+`docs/ACTIVE_RECON.md`.
+
 **Accuracy benchmark** — offline, ground-truth benchmark measuring detection
 precision/recall/F1 against self-contained fixtures (vulnerable + hardened-control
 cases), with documented coverage gaps reported separately. Implemented in

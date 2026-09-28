@@ -1,0 +1,37 @@
+# Example AEGIS engagement that enables SAFE, AUTHORIZED active reconnaissance.
+#
+# Active probing sends live GET/HEAD requests to the target's declared endpoint —
+# non-destructive checks only (headers, TLS, cookies, CORS, exposed paths). It runs
+# ONLY for web targets that set `active_probe: true` AND whose host is authorized
+# by the fail-closed scope below. Point it at a lab or system you own / are
+# explicitly authorized to assess. The example uses a local lab on 127.0.0.1.
+
+engagement: "authorized-web-lab-q3"
+workdir: "./aegis_runs"
+log_level: "INFO"
+
+authorization:
+  dry_run: false
+  rules:
+    - label: "authorized-web-lab"
+      hosts: ["localhost", "127.0.0.1"]
+      url_globs: ["http://localhost*", "http://127.0.0.1*"]
+      authorization_ref: "SoW-2026-014 (signed) — self-owned lab"
+      max_requests: 200
+
+loop:
+  max_rounds: 2
+  probes_per_round: 8
+  min_rounds: 1
+  seed: 1337
+
+targets:
+  - id: "web-app"
+    kind: "web_app"
+    provider: "mock"                 # provider unused by the passive HTTP probe
+    endpoint: "http://127.0.0.1:8080/"
+    mode: "grey_box"
+    metadata:
+      active_probe: true             # opt in to live, non-destructive recon
+      max_probe_requests: 20
+      probe_delay: 0.0               # seconds between requests (be polite on real targets)

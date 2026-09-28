@@ -77,7 +77,10 @@ aegis methodology ai-redteam            # OWASP LLM/ASI + ATLAS AI red-team meth
 # 5. Measure detection accuracy on offline ground-truth fixtures
 aegis benchmark                         # precision / recall / F1 summary
 
-# 6. Run a real engagement from a config (edit the authorization scope first!)
+# 6. Safe ACTIVE recon of an AUTHORIZED web target (non-destructive; GET/HEAD only)
+aegis probe https://your-lab.local --i-am-authorized "SoW-2026-014"
+
+# 7. Run a real engagement from a config (edit the authorization scope first!)
 aegis run examples/authorized_targets.yaml --fail-on high
 ```
 
@@ -180,6 +183,19 @@ re-expressed inside AEGIS's authorization-gated, safe-by-construction model.
 
 ---
 
+## Active reconnaissance (authorized live probing)
+
+Beyond declared-inventory review, AEGIS can perform the **safe recon /
+configuration-review phase of a real web pentest** against a target you're
+authorized to test ([`aegis/active/`](aegis/active/), `aegis probe`). It sends
+only non-destructive `GET`/`HEAD` requests — every URL is authorized against the
+fail-closed scope **first** — and reports live findings: missing security
+headers, weak TLS enforcement, insecure cookies, permissive CORS, version-banner
+disclosure, and exposed `.git`/`.env`/`server-status`. **No exploitation** (no
+injection/auth-bypass/brute-force) — that stays deliberately out of scope. Enable
+it in an engagement with `active_probe: true` on a web target. See
+[docs/ACTIVE_RECON.md](docs/ACTIVE_RECON.md).
+
 ## Accuracy benchmark
 
 How accurate is the detection engine? AEGIS ships an **offline accuracy
@@ -215,6 +231,7 @@ of any individual probe is fixed, so adaptivity never compromises reproducibilit
 aegis/
   core/          types · config · authorization gate · events · confidence · memory
   methodology/   framework-mapped web-app · Active Directory · AI red-team methodologies
+  active/        safe, scope-gated live HTTP reconnaissance (non-destructive)
   benchmark/     offline accuracy benchmark (ground-truth fixtures + scoring)
   mutation/      transform library + reproducible engine
   providers/     mock (offline) · OpenAI-compatible (Ollama/vLLM/gateways)
@@ -226,7 +243,7 @@ aegis/
   reporting/     framework mappings · report model · MD/HTML/JSON renderers
   observability/ structured logging · tracing (OpenTelemetry-optional)
   storage/       SQLite schema + persistence
-  cli.py         run · demo · mutate · scope-check · agents · methodology · benchmark
+  cli.py         run · demo · mutate · scope-check · agents · methodology · benchmark · probe
 docs/            architecture, workflow, MCP, database, deployment, deliverables,
                  methodology (web-app / Active Directory / AI red-team)
 tests/           48 offline tests
