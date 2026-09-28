@@ -129,6 +129,37 @@ class Database:
             "VALUES(?,?,?,?,?,?)",
             (new_id("metric"), aid, target_id, name, float(value), now_ts()))
 
+    def save_tool_run(self, rec: dict, aid: str | None = None) -> None:
+        """Persist an immutable tool-run audit record (from ToolRunRecord.to_dict()).
+
+        Append-only: the platform never updates or deletes these rows, so the
+        audit trail of what was executed (or refused) stays trustworthy.
+        """
+        self.conn.execute(
+            "INSERT INTO tool_runs(id,assessment_id,tool,binary,target,engagement,"
+            "requested_by,reason,argv_json,scope_allowed,scope_reason,risk_level,"
+            "approved,dry_run,executed,exit_code,duration_s,outcome,detail,created_at) "
+            "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (rec["id"], aid, rec["tool"], rec["binary"], rec["target"],
+             rec.get("engagement"), rec.get("requested_by"), rec.get("reason"),
+             _dumps(rec.get("argv", [])), int(bool(rec["scope_allowed"])),
+             rec.get("scope_reason"), rec.get("risk_level"),
+             int(bool(rec["approved"])), int(bool(rec["dry_run"])),
+             int(bool(rec["executed"])), rec.get("exit_code"),
+             rec.get("duration_s"), rec["outcome"], rec.get("detail"),
+             rec["created_at"]))
+        self.conn.commit()
+
+    def tool_runs(self, aid: str | None = None) -> list[dict]:
+        if aid is None:
+            cur = self.conn.execute(
+                "SELECT * FROM tool_runs ORDER BY created_at")
+        else:
+            cur = self.conn.execute(
+                "SELECT * FROM tool_runs WHERE assessment_id=? ORDER BY created_at",
+                (aid,))
+        return [dict(r) for r in cur.fetchall()]
+
     def commit(self) -> None:
         self.conn.commit()
 
